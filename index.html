@@ -46,17 +46,17 @@
         <div class="flex-1 p-6 flex flex-col gap-6 overflow-y-auto">
             
             <div class="text-center">
-                <label for="student-fila-select" class="text-xs uppercase font-bold text-slate-400 mb-1 block">Escolha a Pauta (Fila):</label>
+                <label for="student-fila-select" class="text-xs uppercase font-bold text-slate-400 mb-1 block">Escolha o Slide (Fila):</label>
                 <select id="student-fila-select" onchange="window.mudarFilaAluno(this.value)" class="w-full bg-indigo-50 border border-indigo-200 text-indigo-800 rounded-xl p-3 font-black outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer text-center text-lg">
                 </select>
             </div>
             
-            <button id="btn-pedir-palavra" onclick="window.alunoPedePalavra()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black py-6 rounded-2xl shadow-lg text-lg uppercase transition-all active:scale-95 disabled:bg-slate-300">
+            <button id="btn-pedir-palavra" onclick="window.togglePalavra()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black py-6 rounded-2xl shadow-lg text-lg uppercase transition-all active:scale-95 disabled:bg-slate-300">
                 ✋ Pedir a Palavra
             </button>
 
             <div>
-                <h3 class="text-xs uppercase font-bold text-slate-400 mb-2">Fila de inscritos nesta pauta:</h3>
+                <h3 class="text-xs uppercase font-bold text-slate-400 mb-2">Fila de inscritos neste slide:</h3>
                 <div id="student-fila-lista" class="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col gap-2"></div>
             </div>
         </div>
@@ -87,7 +87,7 @@
                     </button>
                     <button onclick="window.criarNovaFila()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-xl shadow-md transition-all flex items-center justify-center gap-2">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-                        Nova Pauta
+                        Novo Slide
                     </button>
                 </div>
             </div>
@@ -139,7 +139,7 @@
 
         let state = {
             alunosFalas: {},
-            filas: [{ id: "default123", nome: "FECHAMENTO DO CASO", alunosId: [] }],
+            filas: [{ id: "default123", nome: "SLIDE INICIAL", alunosId: [] }],
             filaAlvoId: "default123",
             timer: { ativo: false, segundosAcumulados: 0, startTime: null }
         };
@@ -335,9 +335,9 @@
 
             // Se não houver filas criadas pelo coordenador
             if (!state.filas || state.filas.length === 0) {
-                selectFila.innerHTML = '<option>Nenhuma pauta criada</option>';
+                selectFila.innerHTML = '<option>Nenhum slide criado</option>';
                 selectFila.disabled = true;
-                list.innerHTML = '<p class="text-center py-2 text-slate-400">Aguarde o coordenador criar uma pauta</p>';
+                list.innerHTML = '<p class="text-center py-2 text-slate-400">Aguarde o coordenador criar um slide</p>';
                 btn.disabled = true;
                 btn.innerText = "✋ AGUARDE...";
                 btn.className = "w-full bg-slate-200 text-slate-500 font-black py-4 rounded-2xl";
@@ -359,9 +359,15 @@
 
             const isIn = f.alunosId.includes(id);
 
-            btn.disabled = isIn;
-            btn.innerText = isIn ? "✅ VOCÊ ESTÁ NA FILA" : "✋ PEDIR A PALAVRA";
-            btn.className = isIn ? "w-full bg-slate-200 text-slate-500 font-black py-4 rounded-2xl" : "w-full bg-emerald-500 text-white font-black py-6 rounded-2xl shadow-lg";
+            // Novo botão dinâmico para Pedir a Palavra / Sair da Fila
+            btn.disabled = false;
+            if (isIn) {
+                btn.innerText = "❌ SAIR DA FILA";
+                btn.className = "w-full bg-rose-500 hover:bg-rose-600 text-white font-black py-6 rounded-2xl shadow-lg text-lg uppercase transition-all active:scale-95";
+            } else {
+                btn.innerText = "✋ PEDIR A PALAVRA";
+                btn.className = "w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black py-6 rounded-2xl shadow-lg text-lg uppercase transition-all active:scale-95";
+            }
 
             list.innerHTML = f.alunosId.map((aid, idx) => {
                 const al = alunosListaFixa.find(item => item.id === aid);
@@ -372,13 +378,13 @@
         // --- BOTÕES E FUNÇÕES GERAIS ---
         
         window.resetarSessao = () => {
-            if(confirm("ATENÇÃO: Deseja realmente iniciar uma NOVA tutoria?\n\nIsso vai ZERAR o cronômetro, APAGAR todas as pautas criadas e ZERAR a contagem de falas de todos os alunos!")) {
+            if(confirm("ATENÇÃO: Deseja realmente iniciar uma NOVA tutoria?\n\nIsso vai ZERAR o cronômetro, APAGAR todos os slides criados e ZERAR a contagem de falas de todos os alunos!")) {
                 // Zera o timer
                 state.timer = { ativo: false, segundosAcumulados: 0, startTime: null };
                 
-                // Zera as filas (deixando apenas uma pauta inicial padrão para o sistema não quebrar)
+                // Zera as filas
                 const novaFilaId = Math.random().toString(36).substr(2,9);
-                state.filas = [{ id: novaFilaId, nome: "PAUTA INICIAL", alunosId: [] }];
+                state.filas = [{ id: novaFilaId, nome: "SLIDE INICIAL", alunosId: [] }];
                 state.filaAlvoId = novaFilaId;
                 
                 // Zera as falas
@@ -393,7 +399,7 @@
         window.mudarFilaAluno = (id) => { alunoFilaSelecionadaId = id; renderAluno(); };
         
         window.criarNovaFila = () => {
-            const n = prompt("Nome da Pauta:");
+            const n = prompt("Nome do Slide:");
             if(n) {
                 const nf = { id: Math.random().toString(36).substr(2,9), nome: n.toUpperCase(), alunosId: [] };
                 state.filas.push(nf);
@@ -423,10 +429,20 @@
             }
         };
         
-        window.alunoPedePalavra = () => {
+        // Função combinada para o aluno entrar ou sair da fila
+        window.togglePalavra = () => {
             const id = parseInt(usuarioAtual);
             const f = state.filas.find(fl => fl.id === alunoFilaSelecionadaId);
-            if(f && !f.alunosId.includes(id)) { f.alunosId.push(id); sincronizar(); }
+            if (!f) return;
+            
+            if (f.alunosId.includes(id)) {
+                // Se já está na fila, remove
+                f.alunosId = f.alunosId.filter(i => i !== id);
+            } else {
+                // Se não está, adiciona
+                f.alunosId.push(id);
+            }
+            sincronizar();
         };
 
         atualizarVisibilidadeTelas();
