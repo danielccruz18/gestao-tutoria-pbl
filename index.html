@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciador PBL - Multiplayer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+        #display-timer { font-variant-numeric: tabular-nums; letter-spacing: 0.1em; }
+    </style>
+</head>
+<body class="bg-slate-100 font-sans text-sm md:text-base min-h-screen flex flex-col">
+
+    <div id="login-screen" class="fixed inset-0 bg-slate-900 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl flex flex-col gap-4">
+            <h1 class="text-2xl font-black text-slate-800 text-center">Bem-vindo à Sessão</h1>
+            <p class="text-slate-500 text-center text-sm mb-4">Identifique-se para acessar o painel</p>
+            
+            <select id="user-select" class="w-full bg-slate-50 border border-slate-300 text-slate-700 rounded-lg p-3 font-bold outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer">
+                <option value="">Selecione seu nome...</option>
+                <option value="COORDENADOR">👑 SOU O COORDENADOR (Administrador)</option>
+                </select>
+            
+            <button id="btn-entrar" onclick="window.entrar()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-md transition-all mt-2">
+                Entrar no App
+            </button>
+        </div>
+    </div>
+
+    <div id="student-screen" class="hidden flex-col h-screen max-w-md mx-auto w-full bg-white shadow-xl relative">
+        <div class="bg-indigo-600 p-6 text-white rounded-b-3xl shadow-md">
+            <h2 class="text-sm font-bold text-indigo-200 uppercase tracking-widest mb-1">Logado como</h2>
+            <h1 id="student-name-display" class="text-2xl font-black mb-4">Nome do Aluno</h1>
+            <div class="bg-indigo-800/50 rounded-xl p-4 flex flex-col items-center">
+                <span class="text-[10px] uppercase font-bold text-indigo-300 tracking-[0.2em] mb-1">Tempo Total</span>
+                <div id="student-timer" class="text-3xl font-mono font-black text-white">00:00:00</div>
+            </div>
+        </div>
+
+        <div class="flex-1 p-6 flex flex-col gap-6 overflow-y-auto">
+            
+            <div class="text-center">
+                <label for="student-fila-select" class="text-xs uppercase font-bold text-slate-400 mb-1 block">Escolha a Pauta (Fila):</label>
+                <select id="student-fila-select" onchange="window.mudarFilaAluno(this.value)" class="w-full bg-indigo-50 border border-indigo-200 text-indigo-800 rounded-xl p-3 font-black outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer text-center text-lg">
+                </select>
+            </div>
+            
+            <button id="btn-pedir-palavra" onclick="window.alunoPedePalavra()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black py-6 rounded-2xl shadow-lg text-lg uppercase transition-all active:scale-95 disabled:bg-slate-300">
+                ✋ Pedir a Palavra
+            </button>
+
+            <div>
+                <h3 class="text-xs uppercase font-bold text-slate-400 mb-2">Fila de inscritos nesta pauta:</h3>
+                <div id="student-fila-lista" class="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col gap-2"></div>
+            </div>
+        </div>
+        <button onclick="window.sair()" class="p-4 text-center text-slate-400 text-xs font-bold hover:text-rose-500">Sair da conta</button>
+    </div>
+
+    <div id="tutor-screen" class="hidden flex-col min-h-screen p-4 md:p-6">
+        <header class="max-w-7xl mx-auto w-full mb-6 flex flex-col gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-6">
+                <div class="text-center md:text-left">
+                    <h1 class="text-2xl font-black text-slate-800 tracking-tight">Gestão de Sessão PBL</h1>
+                    <p class="text-slate-500 text-sm">Painel do Coordenador <button onclick="window.sair()" class="ml-2 text-indigo-500 hover:underline">Sair</button></p>
+                </div>
+
+                <div class="flex flex-col items-center bg-slate-50 border border-slate-200 rounded-xl p-4 min-w-[280px] shadow-inner">
+                    <span class="text-[10px] uppercase font-bold text-slate-400 tracking-[0.2em] mb-1">Cronômetro</span>
+                    <div id="tutor-timer" class="text-4xl font-mono font-black text-indigo-600 mb-3">00:00:00</div>
+                    <div class="flex gap-2 w-full">
+                        <button id="btn-iniciar" onclick="window.iniciarTutoria()" class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-3 rounded-lg shadow-sm text-xs uppercase transition-all">Iniciar</button>
+                        <button id="btn-terminar" onclick="window.terminarTutoria()" disabled class="flex-1 bg-slate-200 text-slate-400 font-bold py-2 px-3 rounded-lg shadow-sm text-xs uppercase">Pausar</button>
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <button onclick="window.resetarSessao()" class="bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-600 font-bold py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2 text-sm" title="Zerar cronômetro e apagar filas">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                        Zerar Sessão
+                    </button>
+                    <button onclick="window.criarNovaFila()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-xl shadow-md transition-all flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                        Nova Pauta
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <main class="max-w-7xl mx-auto w-full flex flex-col lg:flex-row gap-6 flex-1 h-[70vh]">
+            <section class="w-full lg:w-5/12 bg-white rounded-2xl shadow-md border border-slate-200 flex flex-col h-full overflow-hidden">
+                <div class="p-5 border-b border-slate-200 bg-slate-50">
+                    <h2 class="text-xl font-bold text-slate-800 mb-4">Lista da Turma</h2>
+                    <div class="bg-indigo-50 border border-indigo-100 p-4 rounded-xl">
+                        <label for="fila-alvo-select" class="block text-[10px] font-black text-indigo-800 mb-2 uppercase tracking-widest">Enviar inscrições para:</label>
+                        <select id="fila-alvo-select" onchange="window.mudarFilaAlvo(this.value)" class="w-full bg-white border border-indigo-200 text-slate-700 rounded-lg p-2.5 text-sm font-bold outline-none"></select>
+                    </div>
+                </div>
+                <div class="p-3 flex-1 overflow-y-auto custom-scroll" id="alunos-container"></div>
+            </section>
+            <section class="w-full lg:w-7/12 flex flex-col h-full overflow-y-auto custom-scroll pr-2" id="filas-container"></section>
+        </main>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+        import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBNnAmktPtdI204a_gokCud1gYgNiQ8Wbs",
+            authDomain: "tutoria-99cfa.firebaseapp.com",
+            databaseURL: "https://tutoria-99cfa-default-rtdb.firebaseio.com",
+            projectId: "tutoria-99cfa",
+            storageBucket: "tutoria-99cfa.firebasestorage.app",
+            messagingSenderId: "852627331176",
+            appId: "1:852627331176:web:5c33a7edef97fc75c343dd"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const dbRef = ref(db, 'pbl-state');
+
+        const alunosListaFixa = [
+            { id: 1, nome: "Ákylla Oliveira" }, { id: 2, nome: "Beatriz Benvindo" },
+            { id: 3, nome: "Daniel Cardoso" }, { id: 4, nome: "Gustavo Araújo" },
+            { id: 5, nome: "Jhennyffer" }, { id: 6, nome: "José Mariel" },
+            { id: 7, nome: "Juliana Amaral" }, { id: 8, nome: "Luiz Henrique" },
+            { id: 9, nome: "Nathalia Santos" }, { id: 10, nome: "Nívea Veras" },
+            { id: 11, nome: "Ricardo Henrique" }, { id: 12, nome: "Sara Maciel" },
+            { id: 13, nome: "Victor Marinho" }, { id: 14, nome: "Vitória Grubert" },
+            { id: 15, nome: "Yuri Moura" }
+        ];
+
+        let state = {
+            alunosFalas: {},
+            filas: [{ id: "default123", nome: "FECHAMENTO DO CASO", alunosId: [] }],
+            filaAlvoId: "default123",
+            timer: { ativo: false, segundosAcumulados: 0, startTime: null }
+        };
+
+        let usuarioAtual = localStorage.getItem('pbl_user');
+        let localTimerInterval;
+        let alunoFilaSelecionadaId = null;
+
+        function atualizarVisibilidadeTelas() {
+            const login = document.getElementById('login-screen');
+            const tutor = document.getElementById('tutor-screen');
+            const student = document.getElementById('student-screen');
+
+            [login, tutor, student].forEach(el => {
+                el.classList.add('hidden');
+                el.classList.remove('flex');
+            });
+
+            if (!usuarioAtual) {
+                login.classList.remove('hidden');
+                login.classList.add('flex');
+            } else if (usuarioAtual === 'COORDENADOR') {
+                tutor.classList.remove('hidden');
+                tutor.classList.add('flex');
+            } else {
+                student.classList.remove('hidden');
+                student.classList.add('flex');
+            }
+        }
+
+        // --- FIREBASE ---
+        onValue(dbRef, (snapshot) => {
+            if (snapshot.exists()) {
+                state = snapshot.val();
+                if (!state.filas) state.filas = [];
+                state.filas.forEach(f => { if (!f.alunosId) f.alunosId = []; });
+                if (!state.alunosFalas) {
+                    state.alunosFalas = {};
+                    alunosListaFixa.forEach(a => state.alunosFalas[a.id] = 0);
+                }
+                atualizarInterface();
+                gerenciarTimerLocal();
+            } else {
+                set(dbRef, state);
+            }
+        });
+
+        function sincronizar() { set(dbRef, state); }
+
+        // --- LÓGICA DE USUÁRIO ---
+        const userSelect = document.getElementById('user-select');
+        alunosListaFixa.sort((a,b)=>a.nome.localeCompare(b.nome)).forEach(a => {
+            userSelect.innerHTML += `<option value="${a.id}">${a.nome}</option>`;
+        });
+
+        window.entrar = () => {
+            const val = document.getElementById('user-select').value;
+            if(!val) return alert("Selecione um nome!");
+            usuarioAtual = val;
+            localStorage.setItem('pbl_user', val);
+            atualizarVisibilidadeTelas();
+            atualizarInterface();
+        };
+
+        window.sair = () => {
+            if(confirm("Deseja sair?")) {
+                usuarioAtual = null;
+                localStorage.removeItem('pbl_user');
+                atualizarVisibilidadeTelas();
+            }
+        };
+
+        // --- CRONÔMETRO ---
+        function formatarTempo(s) {
+            const h = Math.floor(s / 3600);
+            const m = Math.floor((s % 3600) / 60);
+            const sec = s % 60;
+            return [h, m, sec].map(v => v < 10 ? '0' + v : v).join(':');
+        }
+
+        function gerenciarTimerLocal() {
+            clearInterval(localTimerInterval);
+            const dTut = document.getElementById('tutor-timer');
+            const dStd = document.getElementById('student-timer');
+            
+            const tick = () => {
+                let total = state.timer.segundosAcumulados;
+                if (state.timer.ativo) {
+                    total += Math.floor((Date.now() - state.timer.startTime) / 1000);
+                }
+                const str = formatarTempo(total);
+                if(dTut) dTut.innerText = str;
+                if(dStd) dStd.innerText = str;
+            };
+
+            if (state.timer.ativo) {
+                localTimerInterval = setInterval(tick, 1000);
+            }
+            tick();
+        }
+
+        window.iniciarTutoria = () => {
+            state.timer.ativo = true;
+            state.timer.startTime = Date.now();
+            sincronizar();
+        };
+
+        window.terminarTutoria = () => {
+            if (!state.timer.ativo) return;
+            const passados = Math.floor((Date.now() - state.timer.startTime) / 1000);
+            state.timer.segundosAcumulados += passados;
+            state.timer.ativo = false;
+            state.timer.startTime = null;
+            sincronizar();
+        };
+
+        // --- RENDERIZAÇÃO ---
+        function atualizarInterface() {
+            if (!usuarioAtual) return;
+            if (usuarioAtual === 'COORDENADOR') {
+                renderTutor();
+            } else {
+                renderAluno();
+            }
+        }
+
+        function renderTutor() {
+            const sel = document.getElementById('fila-alvo-select');
+            sel.innerHTML = state.filas.map(f => `<option value="${f.id}" ${f.id===state.filaAlvoId?'selected':''}>${f.nome}</option>`).join('');
+            
+            // Controle dos botões de timer
+            const btnIniciar = document.getElementById('btn-iniciar');
+            const btnTerminar = document.getElementById('btn-terminar');
+            
+            if (state.timer.ativo) {
+                btnIniciar.disabled = true;
+                btnIniciar.className = "flex-1 bg-slate-200 text-slate-400 font-bold py-2 px-3 rounded-lg shadow-sm text-xs uppercase cursor-not-allowed";
+                btnTerminar.disabled = false;
+                btnTerminar.className = "flex-1 bg-rose-500 hover:bg-rose-600 text-white font-bold py-2 px-3 rounded-lg shadow-sm text-xs uppercase transition-all";
+            } else {
+                btnIniciar.disabled = false;
+                btnIniciar.className = "flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-3 rounded-lg shadow-sm text-xs uppercase transition-all";
+                btnTerminar.disabled = true;
+                btnTerminar.className = "flex-1 bg-slate-200 text-slate-400 font-bold py-2 px-3 rounded-lg shadow-sm text-xs uppercase cursor-not-allowed";
+            }
+
+            const contAlunos = document.getElementById('alunos-container');
+            contAlunos.innerHTML = alunosListaFixa.map(a => {
+                const f = state.filas.find(fl => fl.id === state.filaAlvoId);
+                const isIn = f?.alunosId.includes(a.id);
+                return `
+                    <div class="flex items-center justify-between p-3 mb-2 rounded-xl border bg-white ${isIn?'opacity-50':''}">
+                        <span class="font-bold text-slate-700">${a.nome}</span>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] font-black bg-blue-50 text-blue-600 px-2 py-1 rounded">FALAS: ${state.alunosFalas[a.id]||0}</span>
+                            <button onclick="window.addNaFila(${a.id})" ${isIn?'disabled':''} class="bg-emerald-500 text-white text-[10px] font-bold py-1.5 px-3 rounded shadow-sm disabled:bg-slate-300">+ FILA</button>
+                            <button onclick="window.ajustarFala(${a.id}, -1)" class="text-rose-500 p-1.5">✕</button>
+                        </div>
+                    </div>`;
+            }).join('');
+
+            const contFilas = document.getElementById('filas-container');
+            contFilas.innerHTML = state.filas.map(f => `
+                <div class="bg-white rounded-2xl shadow-sm border mb-6 overflow-hidden">
+                    <div class="p-4 bg-slate-50 border-b flex justify-between items-center">
+                        <h3 class="font-black text-slate-800 text-xs">${f.nome}</h3>
+                        <div class="flex gap-2">
+                            <button onclick="window.proximo('${f.id}')" class="bg-amber-400 text-amber-900 font-black py-2 px-4 rounded-lg text-xs">PRÓXIMO</button>
+                            <button onclick="window.removerFila('${f.id}')" class="text-slate-300 hover:text-rose-500 p-2">✕</button>
+                        </div>
+                    </div>
+                    <div class="p-4">
+                        ${f.alunosId.length === 0 ? '<p class="text-center text-slate-300 text-xs py-4 italic">Vazia</p>' : 
+                        f.alunosId.map((id, idx) => {
+                            const a = alunosListaFixa.find(al => al.id === id);
+                            return `<div class="p-2 mb-2 rounded ${idx===0?'bg-amber-50 border border-amber-200':'bg-slate-50'} flex justify-between">
+                                <span class="text-sm font-bold">${idx+1}º ${a.nome}</span>
+                                <button onclick="window.tirarDaFila('${f.id}', ${a.id})" class="text-[10px] text-rose-500">Remover</button>
+                            </div>`;
+                        }).join('')}
+                    </div>
+                </div>`).join('');
+        }
+
+        function renderAluno() {
+            const id = parseInt(usuarioAtual);
+            const a = alunosListaFixa.find(al => al.id === id);
+            document.getElementById('student-name-display').innerText = a.nome;
+            
+            const selectFila = document.getElementById('student-fila-select');
+            const list = document.getElementById('student-fila-lista');
+            const btn = document.getElementById('btn-pedir-palavra');
+
+            // Se não houver filas criadas pelo coordenador
+            if (!state.filas || state.filas.length === 0) {
+                selectFila.innerHTML = '<option>Nenhuma pauta criada</option>';
+                selectFila.disabled = true;
+                list.innerHTML = '<p class="text-center py-2 text-slate-400">Aguarde o coordenador criar uma pauta</p>';
+                btn.disabled = true;
+                btn.innerText = "✋ AGUARDE...";
+                btn.className = "w-full bg-slate-200 text-slate-500 font-black py-4 rounded-2xl";
+                return;
+            }
+
+            // Garante que o aluno tenha uma fila válida selecionada
+            if (!alunoFilaSelecionadaId || !state.filas.find(f => f.id === alunoFilaSelecionadaId)) {
+                alunoFilaSelecionadaId = state.filaAlvoId || state.filas[0].id;
+            }
+
+            selectFila.disabled = false;
+            selectFila.innerHTML = state.filas.map(f => 
+                `<option value="${f.id}" ${f.id === alunoFilaSelecionadaId ? 'selected' : ''}>${f.nome}</option>`
+            ).join('');
+
+            const f = state.filas.find(fl => fl.id === alunoFilaSelecionadaId);
+            if(!f) return;
+
+            const isIn = f.alunosId.includes(id);
+
+            btn.disabled = isIn;
+            btn.innerText = isIn ? "✅ VOCÊ ESTÁ NA FILA" : "✋ PEDIR A PALAVRA";
+            btn.className = isIn ? "w-full bg-slate-200 text-slate-500 font-black py-4 rounded-2xl" : "w-full bg-emerald-500 text-white font-black py-6 rounded-2xl shadow-lg";
+
+            list.innerHTML = f.alunosId.map((aid, idx) => {
+                const al = alunosListaFixa.find(item => item.id === aid);
+                return `<div class="p-2 border-b text-sm ${aid===id?'font-black text-indigo-600':'text-slate-600'}">${idx+1}º ${al.nome}</div>`;
+            }).join('') || '<p class="text-center py-2 text-slate-400">Ninguém na fila</p>';
+        }
+
+        // --- BOTÕES E FUNÇÕES GERAIS ---
+        
+        window.resetarSessao = () => {
+            if(confirm("ATENÇÃO: Deseja realmente iniciar uma NOVA tutoria?\n\nIsso vai ZERAR o cronômetro, APAGAR todas as pautas criadas e ZERAR a contagem de falas de todos os alunos!")) {
+                // Zera o timer
+                state.timer = { ativo: false, segundosAcumulados: 0, startTime: null };
+                
+                // Zera as filas (deixando apenas uma pauta inicial padrão para o sistema não quebrar)
+                const novaFilaId = Math.random().toString(36).substr(2,9);
+                state.filas = [{ id: novaFilaId, nome: "PAUTA INICIAL", alunosId: [] }];
+                state.filaAlvoId = novaFilaId;
+                
+                // Zera as falas
+                state.alunosFalas = {};
+                alunosListaFixa.forEach(a => state.alunosFalas[a.id] = 0);
+                
+                sincronizar();
+            }
+        };
+
+        window.mudarFilaAlvo = (id) => { state.filaAlvoId = id; sincronizar(); };
+        window.mudarFilaAluno = (id) => { alunoFilaSelecionadaId = id; renderAluno(); };
+        
+        window.criarNovaFila = () => {
+            const n = prompt("Nome da Pauta:");
+            if(n) {
+                const nf = { id: Math.random().toString(36).substr(2,9), nome: n.toUpperCase(), alunosId: [] };
+                state.filas.push(nf);
+                state.filaAlvoId = nf.id;
+                sincronizar();
+            }
+        };
+        window.removerFila = (id) => { if(confirm("Excluir?")) { state.filas = state.filas.filter(f=>f.id!==id); sincronizar(); } };
+        window.addNaFila = (id) => {
+            const f = state.filas.find(fl => fl.id === state.filaAlvoId);
+            if(f && !f.alunosId.includes(id)) { f.alunosId.push(id); sincronizar(); }
+        };
+        window.tirarDaFila = (fId, aId) => {
+            const f = state.filas.find(fl => fl.id === fId);
+            if(f) { f.alunosId = f.alunosId.filter(i => i !== aId); sincronizar(); }
+        };
+        window.ajustarFala = (id, v) => {
+            state.alunosFalas[id] = Math.max(0, (state.alunosFalas[id]||0) + v);
+            sincronizar();
+        };
+        window.proximo = (fId) => {
+            const f = state.filas.find(fl => fl.id === fId);
+            if(f && f.alunosId.length > 0) {
+                const aid = f.alunosId.shift();
+                state.alunosFalas[aid] = (state.alunosFalas[aid]||0) + 1;
+                sincronizar();
+            }
+        };
+        
+        window.alunoPedePalavra = () => {
+            const id = parseInt(usuarioAtual);
+            const f = state.filas.find(fl => fl.id === alunoFilaSelecionadaId);
+            if(f && !f.alunosId.includes(id)) { f.alunosId.push(id); sincronizar(); }
+        };
+
+        atualizarVisibilidadeTelas();
+    </script>
+</body>
+</html>
