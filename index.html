@@ -63,7 +63,7 @@
         <button onclick="window.sair()" class="p-4 text-center text-slate-400 text-xs font-bold hover:text-rose-500">Sair da conta</button>
     </div>
 
-    <div id="tutor-screen" class="hidden flex-col min-h-screen p-4 md:p-6">
+    <div id="tutor-screen" class="hidden flex-col min-h-screen p-4 md:p-6 relative">
         <header class="max-w-7xl mx-auto w-full mb-6 flex flex-col gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
             <div class="flex flex-col md:flex-row justify-between items-center gap-6">
                 <div class="text-center md:text-left">
@@ -81,7 +81,7 @@
                 </div>
 
                 <div class="flex flex-col sm:flex-row gap-2">
-                    <button onclick="window.resetarSessao()" class="bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-600 font-bold py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2 text-sm" title="Zerar cronômetro e apagar filas">
+                    <button onclick="window.abrirModalEstatisticas()" class="bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-600 font-bold py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2 text-sm" title="Finalizar tutoria e ver estatísticas">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                         Zerar Sessão
                     </button>
@@ -106,6 +106,44 @@
             </section>
             <section class="w-full lg:w-7/12 flex flex-col h-full overflow-y-auto custom-scroll pr-2" id="filas-container"></section>
         </main>
+
+        <div id="stats-modal" class="hidden fixed inset-0 bg-slate-900/80 z-50 items-center justify-center p-4 backdrop-blur-sm">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden fade-in">
+                <div class="bg-indigo-600 p-6 text-white text-center">
+                    <h2 class="text-2xl font-black">Resumo da Sessão</h2>
+                    <p class="text-indigo-200 text-sm">Estatísticas de participação</p>
+                </div>
+                <div class="p-6 flex flex-col gap-6">
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-4 text-center">
+                            <span class="text-[10px] uppercase font-bold text-indigo-400 tracking-widest block mb-1">Total de Falas</span>
+                            <div id="stat-total-falas" class="text-3xl font-black text-indigo-700">0</div>
+                        </div>
+                        <div class="bg-emerald-50 border border-emerald-100 rounded-xl p-4 text-center">
+                            <span class="text-[10px] uppercase font-bold text-emerald-500 tracking-widest block mb-1">Tempo Médio/Fala</span>
+                            <div id="stat-media-falas" class="text-xl font-black text-emerald-700 mt-2">00:00</div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="text-xs uppercase font-bold text-slate-400 mb-3 tracking-widest text-center">Top 3 Participações</h3>
+                        <div id="stat-top3-lista" class="flex flex-col gap-2">
+                            </div>
+                    </div>
+
+                </div>
+                <div class="p-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row gap-3">
+                    <button onclick="window.fecharModalEstatisticas()" class="flex-1 bg-white border border-slate-300 text-slate-600 hover:bg-slate-100 font-bold py-3 rounded-xl transition-all">
+                        Cancelar
+                    </button>
+                    <button onclick="window.confirmarZerarSessao()" class="flex-1 bg-rose-500 hover:bg-rose-600 text-white font-bold py-3 rounded-xl shadow-md transition-all">
+                        Confirmar e Zerar
+                    </button>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <script type="module">
@@ -270,7 +308,6 @@
             const sel = document.getElementById('fila-alvo-select');
             sel.innerHTML = state.filas.map(f => `<option value="${f.id}" ${f.id===state.filaAlvoId?'selected':''}>${f.nome}</option>`).join('');
             
-            // Controle dos botões de timer
             const btnIniciar = document.getElementById('btn-iniciar');
             const btnTerminar = document.getElementById('btn-terminar');
             
@@ -333,7 +370,6 @@
             const list = document.getElementById('student-fila-lista');
             const btn = document.getElementById('btn-pedir-palavra');
 
-            // Se não houver filas criadas pelo coordenador
             if (!state.filas || state.filas.length === 0) {
                 selectFila.innerHTML = '<option>Nenhum slide criado</option>';
                 selectFila.disabled = true;
@@ -344,7 +380,6 @@
                 return;
             }
 
-            // Garante que o aluno tenha uma fila válida selecionada
             if (!alunoFilaSelecionadaId || !state.filas.find(f => f.id === alunoFilaSelecionadaId)) {
                 alunoFilaSelecionadaId = state.filaAlvoId || state.filas[0].id;
             }
@@ -359,7 +394,6 @@
 
             const isIn = f.alunosId.includes(id);
 
-            // Novo botão dinâmico para Pedir a Palavra / Sair da Fila
             btn.disabled = false;
             if (isIn) {
                 btn.innerText = "❌ SAIR DA FILA";
@@ -375,26 +409,85 @@
             }).join('') || '<p class="text-center py-2 text-slate-400">Ninguém na fila</p>';
         }
 
-        // --- BOTÕES E FUNÇÕES GERAIS ---
-        
-        window.resetarSessao = () => {
-            if(confirm("ATENÇÃO: Deseja realmente iniciar uma NOVA tutoria?\n\nIsso vai ZERAR o cronômetro, APAGAR todos os slides criados e ZERAR a contagem de falas de todos os alunos!")) {
-                // Zera o timer
-                state.timer = { ativo: false, segundosAcumulados: 0, startTime: null };
-                
-                // Zera as filas
-                const novaFilaId = Math.random().toString(36).substr(2,9);
-                state.filas = [{ id: novaFilaId, nome: "SLIDE INICIAL", alunosId: [] }];
-                state.filaAlvoId = novaFilaId;
-                
-                // Zera as falas
-                state.alunosFalas = {};
-                alunosListaFixa.forEach(a => state.alunosFalas[a.id] = 0);
-                
-                sincronizar();
+        // --- ESTATÍSTICAS E ZERAR SESSÃO ---
+        window.abrirModalEstatisticas = () => {
+            // Calcula o total de falas e organiza o array para o Top 3
+            let totalFalas = 0;
+            let falasArray = [];
+            
+            for (let id in state.alunosFalas) {
+                const falas = state.alunosFalas[id];
+                totalFalas += falas;
+                const aluno = alunosListaFixa.find(a => a.id == id);
+                if (aluno) falasArray.push({ nome: aluno.nome, falas: falas });
             }
+            
+            // Ordena os alunos por quem falou mais
+            falasArray.sort((a, b) => b.falas - a.falas);
+            // Pega os 3 primeiros (mesmo que tenham 0 falas, para evitar erros)
+            const top3 = falasArray.slice(0, 3);
+            
+            // Calcula o tempo total em segundos (incluindo se o timer estiver rodando)
+            let totalSegundos = state.timer.segundosAcumulados;
+            if (state.timer.ativo && state.timer.startTime) {
+                totalSegundos += Math.floor((Date.now() - state.timer.startTime) / 1000);
+            }
+            
+            // Calcula a média de tempo por fala
+            let mediaSegundos = totalFalas > 0 ? Math.floor(totalSegundos / totalFalas) : 0;
+            
+            // Atualiza os textos no HTML
+            document.getElementById('stat-total-falas').innerText = totalFalas;
+            document.getElementById('stat-media-falas').innerText = formatarTempo(mediaSegundos);
+            
+            const top3Container = document.getElementById('stat-top3-lista');
+            top3Container.innerHTML = top3.map((item, index) => {
+                let bgClass = "bg-slate-50 text-slate-600";
+                let badgeClass = "text-slate-400";
+                
+                // Destaca o primeiro lugar
+                if(index === 0 && item.falas > 0) {
+                    bgClass = "bg-amber-100 text-amber-900 border border-amber-200";
+                    badgeClass = "bg-amber-200 text-amber-800 font-black px-2 py-1 rounded-md text-xs";
+                } else if (item.falas > 0) {
+                    badgeClass = "bg-indigo-100 text-indigo-700 font-black px-2 py-1 rounded-md text-xs";
+                }
+
+                return `
+                <div class="flex justify-between items-center p-3 rounded-xl ${bgClass}">
+                    <span class="font-bold text-sm">${index + 1}º ${item.nome}</span>
+                    <span class="${badgeClass}">${item.falas} falas</span>
+                </div>
+            `}).join('');
+            
+            // Mostra o modal
+            const modal = document.getElementById('stats-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
         };
 
+        window.fecharModalEstatisticas = () => {
+            const modal = document.getElementById('stats-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        };
+
+        window.confirmarZerarSessao = () => {
+            // Executa a limpeza dos dados
+            state.timer = { ativo: false, segundosAcumulados: 0, startTime: null };
+            
+            const novaFilaId = Math.random().toString(36).substr(2,9);
+            state.filas = [{ id: novaFilaId, nome: "SLIDE INICIAL", alunosId: [] }];
+            state.filaAlvoId = novaFilaId;
+            
+            state.alunosFalas = {};
+            alunosListaFixa.forEach(a => state.alunosFalas[a.id] = 0);
+            
+            sincronizar();
+            window.fecharModalEstatisticas();
+        };
+
+        // --- FUNÇÕES GERAIS ---
         window.mudarFilaAlvo = (id) => { state.filaAlvoId = id; sincronizar(); };
         window.mudarFilaAluno = (id) => { alunoFilaSelecionadaId = id; renderAluno(); };
         
@@ -429,17 +522,14 @@
             }
         };
         
-        // Função combinada para o aluno entrar ou sair da fila
         window.togglePalavra = () => {
             const id = parseInt(usuarioAtual);
             const f = state.filas.find(fl => fl.id === alunoFilaSelecionadaId);
             if (!f) return;
             
             if (f.alunosId.includes(id)) {
-                // Se já está na fila, remove
                 f.alunosId = f.alunosId.filter(i => i !== id);
             } else {
-                // Se não está, adiciona
                 f.alunosId.push(id);
             }
             sincronizar();
