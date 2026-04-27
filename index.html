@@ -51,7 +51,7 @@
                 </select>
             </div>
             
-            <button id="btn-pedir-palavra" onclick="window.togglePalavra()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black py-6 rounded-2xl shadow-lg text-lg uppercase transition-all active:scale-95 disabled:bg-slate-300">
+            <button id="btn-pedir-palavra" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black py-6 rounded-2xl shadow-lg text-lg uppercase transition-all active:scale-95 disabled:bg-slate-300">
                 ✋ Pedir a Palavra
             </button>
 
@@ -61,6 +61,25 @@
             </div>
         </div>
         <button onclick="window.sair()" class="p-4 text-center text-slate-400 text-xs font-bold hover:text-rose-500">Sair da conta</button>
+        
+        <div id="student-confirm-modal" class="hidden absolute inset-0 bg-slate-900/80 z-50 items-center justify-center p-4 backdrop-blur-sm">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden fade-in">
+                <div class="bg-rose-500 p-5 text-white text-center">
+                    <h2 class="text-xl font-black">Sair da Fila?</h2>
+                </div>
+                <div class="p-6 text-center text-slate-600 font-medium">
+                    <p>Tem certeza de que deseja sair da fila deste slide? Você perderá o seu lugar atual.</p>
+                </div>
+                <div class="p-4 bg-slate-50 border-t border-slate-200 flex gap-3">
+                    <button onclick="window.fecharModalSairFila()" class="flex-1 bg-white border border-slate-300 text-slate-600 hover:bg-slate-100 font-bold py-3 rounded-xl transition-all">
+                        Cancelar
+                    </button>
+                    <button onclick="window.confirmarSairFila()" class="flex-1 bg-rose-500 hover:bg-rose-600 text-white font-bold py-3 rounded-xl shadow-md transition-all">
+                        Sim, Sair
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div id="tutor-screen" class="hidden flex-col min-h-screen p-4 md:p-6 relative">
@@ -93,8 +112,8 @@
             </div>
         </header>
 
-        <main class="max-w-7xl mx-auto w-full flex flex-col lg:flex-row gap-6 flex-1 h-[70vh]">
-            <section class="w-full lg:w-5/12 bg-white rounded-2xl shadow-md border border-slate-200 flex flex-col h-full overflow-hidden">
+        <main class="max-w-7xl mx-auto w-full flex flex-col md:flex-row gap-6 flex-1 md:max-h-[75vh] pb-10 md:pb-0">
+            <section class="w-full md:w-5/12 bg-white rounded-2xl shadow-md border border-slate-200 flex flex-col h-[45vh] md:h-full overflow-hidden">
                 <div class="p-5 border-b border-slate-200 bg-slate-50">
                     <h2 class="text-xl font-bold text-slate-800 mb-4">Lista da Turma</h2>
                     <div class="bg-indigo-50 border border-indigo-100 p-4 rounded-xl">
@@ -104,7 +123,8 @@
                 </div>
                 <div class="p-3 flex-1 overflow-y-auto custom-scroll" id="alunos-container"></div>
             </section>
-            <section class="w-full lg:w-7/12 flex flex-col h-full overflow-y-auto custom-scroll pr-2" id="filas-container"></section>
+            
+            <section class="w-full md:w-7/12 flex flex-col h-[45vh] md:h-full overflow-y-auto custom-scroll pr-2" id="filas-container"></section>
         </main>
 
         <div id="stats-modal" class="hidden fixed inset-0 bg-slate-900/80 z-50 items-center justify-center p-4 backdrop-blur-sm">
@@ -243,7 +263,7 @@
         };
 
         window.sair = () => {
-            if(confirm("Deseja sair?")) {
+            if(confirm("Deseja sair da sua conta?")) {
                 usuarioAtual = null;
                 localStorage.removeItem('pbl_user');
                 atualizarVisibilidadeTelas();
@@ -377,6 +397,7 @@
                 btn.disabled = true;
                 btn.innerText = "✋ AGUARDE...";
                 btn.className = "w-full bg-slate-200 text-slate-500 font-black py-4 rounded-2xl";
+                btn.onclick = null;
                 return;
             }
 
@@ -392,15 +413,25 @@
             const f = state.filas.find(fl => fl.id === alunoFilaSelecionadaId);
             if(!f) return;
 
-            const isIn = f.alunosId.includes(id);
+            const indexNaFila = f.alunosId.indexOf(id);
 
             btn.disabled = false;
-            if (isIn) {
+            
+            if (indexNaFila === 0) {
+                // É o primeiro da fila
+                btn.innerText = "⏭️ PASSAR PARA O PRÓXIMO";
+                btn.className = "w-full bg-blue-500 hover:bg-blue-600 text-white font-black py-6 rounded-2xl shadow-lg text-lg uppercase transition-all active:scale-95";
+                btn.onclick = window.alunoProximo;
+            } else if (indexNaFila > 0) {
+                // Está na fila, mas não é o primeiro (abre o modal)
                 btn.innerText = "❌ SAIR DA FILA";
                 btn.className = "w-full bg-rose-500 hover:bg-rose-600 text-white font-black py-6 rounded-2xl shadow-lg text-lg uppercase transition-all active:scale-95";
+                btn.onclick = window.abrirModalSairFila;
             } else {
+                // Não está na fila
                 btn.innerText = "✋ PEDIR A PALAVRA";
                 btn.className = "w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black py-6 rounded-2xl shadow-lg text-lg uppercase transition-all active:scale-95";
+                btn.onclick = window.pedirPalavra;
             }
 
             list.innerHTML = f.alunosId.map((aid, idx) => {
@@ -409,9 +440,8 @@
             }).join('') || '<p class="text-center py-2 text-slate-400">Ninguém na fila</p>';
         }
 
-        // --- ESTATÍSTICAS E ZERAR SESSÃO ---
+        // --- ESTATÍSTICAS E ZERAR SESSÃO (COORDENADOR) ---
         window.abrirModalEstatisticas = () => {
-            // Calcula o total de falas e organiza o array para o Top 3
             let totalFalas = 0;
             let falasArray = [];
             
@@ -422,21 +452,16 @@
                 if (aluno) falasArray.push({ nome: aluno.nome, falas: falas });
             }
             
-            // Ordena os alunos por quem falou mais
             falasArray.sort((a, b) => b.falas - a.falas);
-            // Pega os 3 primeiros (mesmo que tenham 0 falas, para evitar erros)
             const top3 = falasArray.slice(0, 3);
             
-            // Calcula o tempo total em segundos (incluindo se o timer estiver rodando)
             let totalSegundos = state.timer.segundosAcumulados;
             if (state.timer.ativo && state.timer.startTime) {
                 totalSegundos += Math.floor((Date.now() - state.timer.startTime) / 1000);
             }
             
-            // Calcula a média de tempo por fala
             let mediaSegundos = totalFalas > 0 ? Math.floor(totalSegundos / totalFalas) : 0;
             
-            // Atualiza os textos no HTML
             document.getElementById('stat-total-falas').innerText = totalFalas;
             document.getElementById('stat-media-falas').innerText = formatarTempo(mediaSegundos);
             
@@ -445,7 +470,6 @@
                 let bgClass = "bg-slate-50 text-slate-600";
                 let badgeClass = "text-slate-400";
                 
-                // Destaca o primeiro lugar
                 if(index === 0 && item.falas > 0) {
                     bgClass = "bg-amber-100 text-amber-900 border border-amber-200";
                     badgeClass = "bg-amber-200 text-amber-800 font-black px-2 py-1 rounded-md text-xs";
@@ -460,7 +484,6 @@
                 </div>
             `}).join('');
             
-            // Mostra o modal
             const modal = document.getElementById('stats-modal');
             modal.classList.remove('hidden');
             modal.classList.add('flex');
@@ -473,7 +496,6 @@
         };
 
         window.confirmarZerarSessao = () => {
-            // Executa a limpeza dos dados
             state.timer = { ativo: false, segundosAcumulados: 0, startTime: null };
             
             const novaFilaId = Math.random().toString(36).substr(2,9);
@@ -485,6 +507,29 @@
             
             sincronizar();
             window.fecharModalEstatisticas();
+        };
+
+        // --- CONFIRMAÇÃO DE SAIR DA FILA (ALUNO) ---
+        window.abrirModalSairFila = () => {
+            const modal = document.getElementById('student-confirm-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        };
+
+        window.fecharModalSairFila = () => {
+            const modal = document.getElementById('student-confirm-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        };
+
+        window.confirmarSairFila = () => {
+            const id = parseInt(usuarioAtual);
+            const f = state.filas.find(fl => fl.id === alunoFilaSelecionadaId);
+            if (f && f.alunosId.includes(id)) {
+                f.alunosId = f.alunosId.filter(i => i !== id);
+                sincronizar();
+            }
+            window.fecharModalSairFila();
         };
 
         // --- FUNÇÕES GERAIS ---
@@ -513,6 +558,7 @@
             state.alunosFalas[id] = Math.max(0, (state.alunosFalas[id]||0) + v);
             sincronizar();
         };
+        
         window.proximo = (fId) => {
             const f = state.filas.find(fl => fl.id === fId);
             if(f && f.alunosId.length > 0) {
@@ -521,18 +567,26 @@
                 sincronizar();
             }
         };
+
+        window.alunoProximo = () => {
+            const id = parseInt(usuarioAtual);
+            const f = state.filas.find(fl => fl.id === alunoFilaSelecionadaId);
+            if (f && f.alunosId[0] === id) {
+                f.alunosId.shift();
+                state.alunosFalas[id] = (state.alunosFalas[id] || 0) + 1;
+                sincronizar();
+            }
+        };
         
-        window.togglePalavra = () => {
+        window.pedirPalavra = () => {
             const id = parseInt(usuarioAtual);
             const f = state.filas.find(fl => fl.id === alunoFilaSelecionadaId);
             if (!f) return;
             
-            if (f.alunosId.includes(id)) {
-                f.alunosId = f.alunosId.filter(i => i !== id);
-            } else {
+            if (!f.alunosId.includes(id)) {
                 f.alunosId.push(id);
+                sincronizar();
             }
-            sincronizar();
         };
 
         atualizarVisibilidadeTelas();
