@@ -61,6 +61,12 @@
                 </div>
             </div>
 
+            <!-- NOVO BLOCO: VISOR DE TEMPO DE FALA -->
+            <div id="bloco-cronometro-fala" class="hidden mb-2 bg-slate-50 border-2 border-slate-200 rounded-2xl p-6 text-center shadow-inner fade-in">
+                <h3 class="text-xs uppercase font-bold text-slate-400 tracking-widest mb-2">Seu Tempo de Fala</h3>
+                <div id="timer-fala-aluno" class="text-5xl font-mono text-emerald-500 transition-colors duration-300">00:00</div>
+            </div>
+
             <button id="btn-pedir-palavra" onclick="window.pedirPalavra()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black py-6 rounded-2xl shadow-lg text-lg uppercase transition-all active:scale-95 disabled:bg-slate-300">
                 ✋ Pedir a Palavra
             </button>
@@ -92,7 +98,6 @@
                 </div>
 
                 <div class="flex flex-col sm:flex-row gap-2 items-center">
-                    <!-- CONTROLE DE CRÉDITOS DO COORDENADOR -->
                     <div class="flex items-center gap-2 bg-indigo-50 px-3 py-2 rounded-xl border border-indigo-200 h-full">
                         <label for="input-creditos" class="text-[10px] font-black text-indigo-800 uppercase tracking-widest">Créditos:</label>
                         <input type="number" id="input-creditos" class="w-12 p-1 rounded border border-indigo-300 text-center font-bold text-indigo-700 outline-none" min="1" value="3">
@@ -159,7 +164,8 @@
             filas: [{ id: "default123", nome: "SLIDE INICIAL", alunosId: [] }],
             filaAlvoId: "default123",
             timer: { ativo: false, segundosAcumulados: 0, startTime: null },
-            maxCreditos: 3 // NOVO: Controle de créditos
+            maxCreditos: 3,
+            oradorAtual: null 
         };
 
         let usuarioAtual = localStorage.getItem('pbl_user');
@@ -199,6 +205,7 @@
                     alunosListaFixa.forEach(a => state.alunosFalas[a.id] = 0);
                 }
                 if (!state.maxCreditos) state.maxCreditos = 3;
+                if (state.oradorAtual === undefined) state.oradorAtual = null;
                 
                 atualizarInterface();
                 gerenciarTimerLocal();
@@ -246,6 +253,7 @@
             const dStd = document.getElementById('student-timer');
             
             const tick = () => {
+                // Relógio principal
                 let total = state.timer.segundosAcumulados;
                 if (state.timer.ativo) {
                     total += Math.floor((Date.now() - state.timer.startTime) / 1000);
@@ -253,11 +261,37 @@
                 const str = formatarTempo(total);
                 if(dTut) dTut.innerText = str;
                 if(dStd) dStd.innerText = str;
+
+                // Relógio da fala atual
+                if (state.oradorAtual) {
+                    const passados = Math.floor((Date.now() - state.oradorAtual.startTime) / 1000);
+                    const m = Math.floor(passados / 60);
+                    const s = passados % 60;
+                    const tempoStr = `${m < 10 ? '0'+m : m}:${s < 10 ? '0'+s : s}`;
+
+                    // Atualiza visor na tela do Aluno (se for o orador)
+                    if (state.oradorAtual.id == usuarioAtual) {
+                        const dFala = document.getElementById('timer-fala-aluno');
+                        if (dFala) {
+                            dFala.innerText = tempoStr;
+                            if (passados >= 210) { // 3:30
+                                dFala.className = "text-5xl font-mono font-black text-rose-600 transition-colors duration-300";
+                            } else {
+                                dFala.className = "text-5xl font-mono text-emerald-500 transition-colors duration-300";
+                            }
+                        }
+                    }
+
+                    // Atualiza miniatura no painel do Tutor
+                    const dTutorFala = document.getElementById(`tutor-timer-fala-${state.oradorAtual.id}`);
+                    if (dTutorFala) {
+                        dTutorFala.innerText = tempoStr;
+                        if(passados >= 210) dTutorFala.classList.add('text-rose-600');
+                    }
+                }
             };
 
-            if (state.timer.ativo) {
-                localTimerInterval = setInterval(tick, 1000);
-            }
+            localTimerInterval = setInterval(tick, 1000);
             tick();
         }
 
@@ -282,7 +316,6 @@
             if (novoValor > 0) {
                 state.maxCreditos = novoValor;
                 sincronizar();
-                alert(`Créditos atualizados para ${novoValor} falas por aluno.`);
             }
         };
 
@@ -301,14 +334,33 @@
             sincronizar();
         };
 
+        window.iniciarFala = (alunoId) => {
+            state.oradorAtual = { id: alunoId, startTime: Date.now() };
+            sincronizar();
+        };
+
+        window.pararFala = () => {
+            state.oradorAtual = null;
+            sincronizar();
+        };
+
         window.contabilizarFala = (alunoId) => {
             if(!state.alunosFalas[alunoId]) state.alunosFalas[alunoId] = 0;
             state.alunosFalas[alunoId]++;
             
-            // Tira da fila atual quando fala
             const fila = state.filas.find(f => f.id === state.filaAlvoId);
             if(fila) {
                 fila.alunosId = fila.alunosId.filter(id => id != alunoId);
+                
+                // Se o aluno que teve a fala contabilizada for o orador atual
+                if(state.oradorAtual && state.oradorAtual.id === alunoId) {
+                    // Passa para o próximo da fila automaticamente se houver
+                    if (fila.alunosId.length > 0) {
+                        state.oradorAtual = { id: fila.alunosId[0], startTime: Date.now() };
+                    } else {
+                        state.oradorAtual = null;
+                    }
+                }
             }
             sincronizar();
         };
@@ -317,6 +369,14 @@
             const fila = state.filas.find(f => f.id === state.filaAlvoId);
             if(fila) {
                 fila.alunosId = fila.alunosId.filter(id => id != alunoId);
+                
+                if(state.oradorAtual && state.oradorAtual.id === alunoId) {
+                    if (fila.alunosId.length > 0) {
+                        state.oradorAtual = { id: fila.alunosId[0], startTime: Date.now() };
+                    } else {
+                        state.oradorAtual = null;
+                    }
+                }
                 sincronizar();
             }
         };
@@ -328,6 +388,7 @@
                 state.filas = [{ id: "default123", nome: "SLIDE INICIAL", alunosId: [] }];
                 state.filaAlvoId = "default123";
                 state.timer = { ativo: false, segundosAcumulados: 0, startTime: null };
+                state.oradorAtual = null;
                 sincronizar();
             }
         };
@@ -382,19 +443,27 @@
             const contAlunos = document.getElementById('alunos-container');
             const filaAtual = state.filas.find(fl => fl.id === state.filaAlvoId);
             
-            // Renderiza lista de alunos com botões corrigidos
             contAlunos.innerHTML = alunosListaFixa.map(a => {
                 const isIn = filaAtual?.alunosId.includes(a.id);
                 const falas = state.alunosFalas[a.id] || 0;
+                const isOrador = state.oradorAtual && state.oradorAtual.id === a.id;
                 
                 return `
-                    <div class="flex items-center justify-between p-3 mb-2 rounded-xl border ${isIn ? 'bg-indigo-50 border-indigo-300' : 'bg-white'}">
+                    <div class="flex items-center justify-between p-3 mb-2 rounded-xl border ${isOrador ? 'bg-emerald-50 border-emerald-300 ring-2 ring-emerald-400' : (isIn ? 'bg-indigo-50 border-indigo-300' : 'bg-white')}">
                         <span class="font-bold text-slate-700">${a.nome}</span>
                         <div class="flex items-center gap-2">
                             <span class="text-[10px] font-black bg-blue-50 text-blue-600 px-2 py-1 rounded">FALAS: ${falas}/${state.maxCreditos}</span>
+                            
+                            ${isIn && !isOrador ? `<button onclick="window.iniciarFala(${a.id})" class="bg-blue-500 text-white p-1.5 rounded hover:bg-blue-600" title="Dar a palavra (Iniciar Timer)">🎤</button>` : ''}
+                            
+                            ${isOrador ? `
+                                <span id="tutor-timer-fala-${a.id}" class="text-xs font-mono font-black text-emerald-600 bg-white border border-emerald-200 px-2 py-1.5 rounded">00:00</span>
+                                <button onclick="window.pararFala()" class="bg-amber-500 text-white p-1.5 rounded hover:bg-amber-600" title="Pausar Timer">⏸️</button>
+                            ` : ''}
+
                             ${isIn ? `
-                                <button onclick="window.contabilizarFala(${a.id})" class="bg-emerald-500 text-white p-1.5 rounded hover:bg-emerald-600" title="Validar fala e remover da fila">✅</button>
-                                <button onclick="window.removerDaFila(${a.id})" class="bg-rose-500 text-white p-1.5 rounded hover:bg-rose-600" title="Apenas remover da fila">❌</button>
+                                <button onclick="window.contabilizarFala(${a.id})" class="bg-emerald-500 text-white p-1.5 rounded hover:bg-emerald-600" title="Contabilizar e Passar a Palavra">✅</button>
+                                <button onclick="window.removerDaFila(${a.id})" class="bg-rose-500 text-white p-1.5 rounded hover:bg-rose-600" title="Remover da fila">❌</button>
                             ` : ''}
                         </div>
                     </div>`;
@@ -404,7 +473,8 @@
             contFilas.innerHTML = state.filas.map(f => {
                 const alunosFila = f.alunosId.map((id, index) => {
                     const aluno = alunosListaFixa.find(al => al.id === id);
-                    return `<div class="bg-white p-2 border-b last:border-0 text-sm flex justify-between"><span class="font-bold">${index + 1}. ${aluno?.nome}</span></div>`;
+                    const falando = state.oradorAtual && state.oradorAtual.id === id ? '<span class="ml-2 text-[10px] bg-emerald-500 text-white px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse">Falando</span>' : '';
+                    return `<div class="bg-white p-2 border-b last:border-0 text-sm flex justify-between items-center"><span class="font-bold">${index + 1}. ${aluno?.nome} ${falando}</span></div>`;
                 }).join('');
 
                 return `
@@ -434,13 +504,14 @@
                 lista.innerHTML = filaAt.alunosId.map((id, idx) => {
                     const al = alunosListaFixa.find(a => a.id == id);
                     const isMe = id == usuarioAtual;
-                    return `<div class="p-2 rounded ${isMe ? 'bg-indigo-100 font-bold text-indigo-700' : 'bg-white border'}">${idx+1}. ${al?.nome} ${isMe?'(Você)':''}</div>`;
+                    const falando = state.oradorAtual && state.oradorAtual.id === id ? '<span class="float-right text-[10px] bg-emerald-500 text-white px-2 py-0.5 rounded-full uppercase tracking-wider">Falando</span>' : '';
+                    return `<div class="p-2 rounded ${isMe ? 'bg-indigo-100 font-bold text-indigo-700' : 'bg-white border'}">${idx+1}. ${al?.nome} ${isMe?'(Você)':''} ${falando}</div>`;
                 }).join('');
             } else {
                 lista.innerHTML = `<div class="text-slate-400 text-center italic text-sm">Ninguém na fila</div>`;
             }
 
-            // LÓGICA DE CRÉDITOS DO ALUNO
+            // Créditos
             const falasUsadas = state.alunosFalas[usuarioAtual] || 0;
             const max = state.maxCreditos || 3;
             const creditosRestantes = max - falasUsadas;
@@ -453,6 +524,17 @@
                 else displayCreditos.className = "text-2xl font-black text-indigo-600 mt-1";
             }
 
+            // Exibição condicional do bloco de Cronômetro de Fala
+            const blocoCronometro = document.getElementById('bloco-cronometro-fala');
+            if (state.oradorAtual && state.oradorAtual.id == usuarioAtual) {
+                blocoCronometro.classList.remove('hidden');
+                blocoCronometro.classList.add('flex', 'flex-col');
+            } else {
+                blocoCronometro.classList.add('hidden');
+                blocoCronometro.classList.remove('flex', 'flex-col');
+            }
+
+            // Lógica do botão Pedir a Palavra
             const btnPedir = document.getElementById('btn-pedir-palavra');
             if (btnPedir) {
                 const jaNaFila = filaAt?.alunosId.includes(parseInt(usuarioAtual));
