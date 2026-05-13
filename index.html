@@ -60,10 +60,14 @@
                 </div>
             </div>
 
-            <!-- BLOCO: VISOR DE TEMPO DE FALA (ALUNO) -->
-            <div id="bloco-cronometro-fala" class="hidden mb-2 bg-slate-50 border-2 border-emerald-200 rounded-2xl p-6 text-center shadow-inner fade-in">
-                <h3 class="text-xs uppercase font-bold text-emerald-600 tracking-widest mb-2">Seu Tempo de Fala</h3>
-                <div id="timer-fala-aluno" class="text-6xl font-mono font-black text-emerald-500 transition-colors duration-300">00:00</div>
+            <!-- BLOCO: VISOR DE TEMPO DE FALA (AGORA VISÍVEL PARA TODOS OS ALUNOS) -->
+            <div id="bloco-cronometro-fala" class="hidden mb-2 bg-slate-50 border-2 border-emerald-200 rounded-2xl p-6 text-center shadow-md fade-in">
+                <h3 class="text-[10px] uppercase font-bold text-emerald-600 tracking-widest mb-1">🎤 Falando Agora:</h3>
+                <h2 id="nome-orador-aluno" class="text-xl font-black text-slate-800 mb-2 truncate">...</h2>
+                <div id="timer-fala-aluno" class="text-5xl font-mono font-black text-emerald-500 transition-colors duration-300">00:00</div>
+                <button id="btn-finalizar-fala-aluno" onclick="window.contabilizarFala(parseInt(usuarioAtual))" class="hidden mt-4 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3 rounded-xl shadow-md text-sm uppercase tracking-wider transition-all active:scale-95">
+                    ✅ Concluir Minha Fala
+                </button>
             </div>
 
             <button id="btn-pedir-palavra" onclick="window.pedirPalavra()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black py-6 rounded-2xl shadow-lg text-lg uppercase transition-all active:scale-95 disabled:bg-slate-300">
@@ -276,15 +280,13 @@
                     const tempoStr = `${m < 10 ? '0'+m : m}:${s < 10 ? '0'+s : s}`;
                     const isAlert = passados >= 210; // 3 minutos e 30 segundos
 
-                    // Visor Principal do Aluno
-                    if (state.oradorAtual.id == usuarioAtual) {
-                        const dFalaAluno = document.getElementById('timer-fala-aluno');
-                        if (dFalaAluno) {
-                            dFalaAluno.innerText = tempoStr;
-                            dFalaAluno.className = isAlert 
-                                ? "text-6xl font-mono font-black text-rose-600 transition-colors duration-300" 
-                                : "text-6xl font-mono font-black text-emerald-500 transition-colors duration-300";
-                        }
+                    // Visor Principal do Aluno (Agorar visível para TODOS)
+                    const dFalaAluno = document.getElementById('timer-fala-aluno');
+                    if (dFalaAluno) {
+                        dFalaAluno.innerText = tempoStr;
+                        dFalaAluno.className = isAlert 
+                            ? "text-5xl font-mono font-black text-rose-600 transition-colors duration-300" 
+                            : "text-5xl font-mono font-black text-emerald-500 transition-colors duration-300";
                     }
 
                     // Visor Destaque do Coordenador
@@ -296,7 +298,7 @@
                             : "text-5xl font-mono font-black text-emerald-600 mb-2 transition-colors duration-300";
                     }
 
-                    // Miniaturas nas Listas (As classes speaker-timer foram injetadas dinamicamente)
+                    // Miniaturas nas Listas
                     document.querySelectorAll('.speaker-timer').forEach(el => {
                         el.innerText = tempoStr;
                         if (isAlert) {
@@ -329,7 +331,7 @@
             sincronizar();
         };
 
-        // --- AÇÕES DO COORDENADOR ---
+        // --- AÇÕES COMPARTILHADAS E DO COORDENADOR ---
         window.definirCreditos = () => {
             const novoValor = parseInt(document.getElementById('input-creditos').value);
             if (novoValor > 0) {
@@ -353,6 +355,7 @@
             sincronizar();
         };
 
+        // Pode ser chamada pelo coordenador ou pelo próprio aluno
         window.iniciarFala = (alunoId) => {
             state.oradorAtual = { id: alunoId, startTime: Date.now() };
             sincronizar();
@@ -363,21 +366,27 @@
             sincronizar();
         };
 
+        // Contabiliza e remove da fila atual (Chamado pelo tutor ou pelo próprio aluno no "Concluir Minha Fala")
         window.contabilizarFala = (alunoId) => {
             if(!state.alunosFalas[alunoId]) state.alunosFalas[alunoId] = 0;
             state.alunosFalas[alunoId]++;
             
-            const fila = state.filas.find(f => f.id === state.filaAlvoId);
+            // Busca a fila onde o aluno está
+            const fila = state.filas.find(f => f.alunosId.includes(alunoId));
             if(fila) {
                 fila.alunosId = fila.alunosId.filter(id => id != alunoId);
                 
                 if(state.oradorAtual && state.oradorAtual.id === alunoId) {
                     if (fila.alunosId.length > 0) {
+                        // Passa pro próximo automático
                         state.oradorAtual = { id: fila.alunosId[0], startTime: Date.now() };
                     } else {
                         state.oradorAtual = null;
                     }
                 }
+            } else if (state.oradorAtual && state.oradorAtual.id === alunoId) {
+                 // Fallback caso não ache a fila
+                 state.oradorAtual = null;
             }
             sincronizar();
         };
@@ -539,9 +548,20 @@
                 lista.innerHTML = filaAt.alunosId.map((id, idx) => {
                     const al = alunosListaFixa.find(a => a.id == id);
                     const isMe = id == usuarioAtual;
-                    const falando = state.oradorAtual && state.oradorAtual.id === id ? 
-                        `<span class="speaker-timer float-right inline-block font-mono font-black bg-emerald-100 border border-emerald-300 text-emerald-700 px-2 py-0.5 rounded text-xs animate-pulse">00:00</span>` : '';
-                    return `<div class="p-3 rounded-lg ${isMe ? 'bg-indigo-100 font-bold text-indigo-700 border border-indigo-200' : 'bg-white border'}">${idx+1}. ${al?.nome} ${isMe?'(Você)':''} ${falando}</div>`;
+                    const isOrador = state.oradorAtual && state.oradorAtual.id === id;
+                    
+                    let btnAcaoAluno = '';
+                    if (isMe && !isOrador) {
+                        btnAcaoAluno = `<button onclick="window.iniciarFala(${id})" class="ml-2 bg-blue-500 hover:bg-blue-600 text-white text-[10px] px-2 py-1.5 rounded shadow-sm uppercase font-black tracking-wider whitespace-nowrap transition-all active:scale-95">🎤 Iniciar Minha Fala</button>`;
+                    }
+
+                    const falando = isOrador ? 
+                        `<span class="speaker-timer ml-2 inline-block font-mono font-black bg-emerald-100 border border-emerald-300 text-emerald-700 px-2 py-0.5 rounded text-[10px] animate-pulse">00:00</span>` : '';
+                    
+                    return `<div class="p-3 rounded-lg flex justify-between items-center gap-2 ${isMe ? 'bg-indigo-100 font-bold text-indigo-700 border border-indigo-200' : 'bg-white border'}">
+                        <div class="flex-1 truncate">${idx+1}. ${al?.nome} ${isMe?'(Você)':''} ${falando}</div>
+                        ${btnAcaoAluno}
+                    </div>`;
                 }).join('');
             } else {
                 lista.innerHTML = `<div class="text-slate-400 text-center italic text-sm p-2">Ninguém na fila</div>`;
@@ -559,10 +579,22 @@
                 else displayCreditos.className = "text-2xl font-black text-indigo-600 mt-1";
             }
 
+            // Bloco de Cronômetro Principal visível para TODOS os alunos
             const blocoCronometro = document.getElementById('bloco-cronometro-fala');
-            if (state.oradorAtual && state.oradorAtual.id == usuarioAtual) {
+            const nomeOradorAluno = document.getElementById('nome-orador-aluno');
+            const btnFinalizar = document.getElementById('btn-finalizar-fala-aluno');
+
+            if (state.oradorAtual) {
                 blocoCronometro.classList.remove('hidden');
                 blocoCronometro.classList.add('flex', 'flex-col');
+                const alunoFalando = alunosListaFixa.find(a => a.id === state.oradorAtual.id);
+                nomeOradorAluno.innerText = alunoFalando ? (alunoFalando.id == usuarioAtual ? 'VOCÊ' : alunoFalando.nome) : 'Desconhecido';
+                
+                if (state.oradorAtual.id == usuarioAtual) {
+                    btnFinalizar.classList.remove('hidden');
+                } else {
+                    btnFinalizar.classList.add('hidden');
+                }
             } else {
                 blocoCronometro.classList.add('hidden');
                 blocoCronometro.classList.remove('flex', 'flex-col');
