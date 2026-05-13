@@ -60,12 +60,12 @@
                 </div>
             </div>
 
-            <!-- BLOCO: VISOR DE TEMPO DE FALA (AGORA VISÍVEL PARA TODOS OS ALUNOS) -->
+            <!-- BLOCO: VISOR DE TEMPO DE FALA (VISÍVEL PARA TODOS) -->
             <div id="bloco-cronometro-fala" class="hidden mb-2 bg-slate-50 border-2 border-emerald-200 rounded-2xl p-6 text-center shadow-md fade-in">
                 <h3 class="text-[10px] uppercase font-bold text-emerald-600 tracking-widest mb-1">🎤 Falando Agora:</h3>
                 <h2 id="nome-orador-aluno" class="text-xl font-black text-slate-800 mb-2 truncate">...</h2>
                 <div id="timer-fala-aluno" class="text-5xl font-mono font-black text-emerald-500 transition-colors duration-300">00:00</div>
-                <button id="btn-finalizar-fala-aluno" onclick="window.contabilizarFala(parseInt(usuarioAtual))" class="hidden mt-4 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3 rounded-xl shadow-md text-sm uppercase tracking-wider transition-all active:scale-95">
+                <button id="btn-finalizar-fala-aluno" onclick="window.concluirMinhaFala()" class="hidden mt-4 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3 rounded-xl shadow-md text-sm uppercase tracking-wider transition-all active:scale-95">
                     ✅ Concluir Minha Fala
                 </button>
             </div>
@@ -280,7 +280,7 @@
                     const tempoStr = `${m < 10 ? '0'+m : m}:${s < 10 ? '0'+s : s}`;
                     const isAlert = passados >= 210; // 3 minutos e 30 segundos
 
-                    // Visor Principal do Aluno (Agorar visível para TODOS)
+                    // Visor Principal do Aluno
                     const dFalaAluno = document.getElementById('timer-fala-aluno');
                     if (dFalaAluno) {
                         dFalaAluno.innerText = tempoStr;
@@ -366,26 +366,26 @@
             sincronizar();
         };
 
-        // Contabiliza e remove da fila atual (Chamado pelo tutor ou pelo próprio aluno no "Concluir Minha Fala")
+        // Função encapsulada para o botão do aluno poder acessá-la sem erros de escopo
+        window.concluirMinhaFala = () => {
+            if (usuarioAtual) {
+                window.contabilizarFala(parseInt(usuarioAtual));
+            }
+        };
+
+        // Contabiliza e remove da fila atual sem iniciar o próximo automaticamente
         window.contabilizarFala = (alunoId) => {
             if(!state.alunosFalas[alunoId]) state.alunosFalas[alunoId] = 0;
             state.alunosFalas[alunoId]++;
             
-            // Busca a fila onde o aluno está
             const fila = state.filas.find(f => f.alunosId.includes(alunoId));
             if(fila) {
                 fila.alunosId = fila.alunosId.filter(id => id != alunoId);
                 
                 if(state.oradorAtual && state.oradorAtual.id === alunoId) {
-                    if (fila.alunosId.length > 0) {
-                        // Passa pro próximo automático
-                        state.oradorAtual = { id: fila.alunosId[0], startTime: Date.now() };
-                    } else {
-                        state.oradorAtual = null;
-                    }
+                    state.oradorAtual = null; // Apenas encerra o timer e permite que o próximo clique no seu próprio botão
                 }
             } else if (state.oradorAtual && state.oradorAtual.id === alunoId) {
-                 // Fallback caso não ache a fila
                  state.oradorAtual = null;
             }
             sincronizar();
@@ -397,11 +397,7 @@
                 fila.alunosId = fila.alunosId.filter(id => id != alunoId);
                 
                 if(state.oradorAtual && state.oradorAtual.id === alunoId) {
-                    if (fila.alunosId.length > 0) {
-                        state.oradorAtual = { id: fila.alunosId[0], startTime: Date.now() };
-                    } else {
-                        state.oradorAtual = null;
-                    }
+                    state.oradorAtual = null; // Parar a fala se o aluno atual for removido
                 }
                 sincronizar();
             }
@@ -456,7 +452,6 @@
         function renderTutor() {
             document.getElementById('input-creditos').value = state.maxCreditos || 3;
 
-            // Gerencia Bloco Destaque do Orador no Header
             const blocoOradorTutor = document.getElementById('bloco-orador-tutor');
             if (state.oradorAtual) {
                 blocoOradorTutor.classList.remove('hidden');
@@ -552,7 +547,15 @@
                     
                     let btnAcaoAluno = '';
                     if (isMe && !isOrador) {
-                        btnAcaoAluno = `<button onclick="window.iniciarFala(${id})" class="ml-2 bg-blue-500 hover:bg-blue-600 text-white text-[10px] px-2 py-1.5 rounded shadow-sm uppercase font-black tracking-wider whitespace-nowrap transition-all active:scale-95">🎤 Iniciar Minha Fala</button>`;
+                        const ngmFalando = !state.oradorAtual;
+                        const souOPrimeiro = idx === 0;
+
+                        if (ngmFalando && souOPrimeiro) {
+                            // Se for a vez dele (primeiro da fila) e ninguem está falando, permite ele mesmo iniciar a própria fala
+                            btnAcaoAluno = `<button onclick="window.iniciarFala(${id})" class="ml-2 bg-blue-500 hover:bg-blue-600 text-white text-[10px] px-2 py-1.5 rounded shadow-sm uppercase font-black tracking-wider whitespace-nowrap transition-all active:scale-95">🎤 Iniciar Minha Fala</button>`;
+                        } else {
+                            btnAcaoAluno = `<span class="ml-2 text-[9px] text-slate-400 font-bold uppercase tracking-wider text-right leading-tight">Aguarde<br>sua vez</span>`;
+                        }
                     }
 
                     const falando = isOrador ? 
@@ -579,7 +582,6 @@
                 else displayCreditos.className = "text-2xl font-black text-indigo-600 mt-1";
             }
 
-            // Bloco de Cronômetro Principal visível para TODOS os alunos
             const blocoCronometro = document.getElementById('bloco-cronometro-fala');
             const nomeOradorAluno = document.getElementById('nome-orador-aluno');
             const btnFinalizar = document.getElementById('btn-finalizar-fala-aluno');
