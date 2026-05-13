@@ -40,7 +40,7 @@
             <h2 class="text-sm font-bold text-indigo-200 uppercase tracking-widest mb-1">Logado como</h2>
             <h1 id="student-name-display" class="text-2xl font-black mb-4">Nome do Aluno</h1>
             <div class="bg-indigo-800/50 rounded-xl p-4 flex flex-col items-center">
-                <span class="text-[10px] uppercase font-bold text-indigo-300 tracking-[0.2em] mb-1">Tempo Total</span>
+                <span class="text-[10px] uppercase font-bold text-indigo-300 tracking-[0.2em] mb-1">Tempo Total da Sessão</span>
                 <div id="student-timer" class="text-3xl font-mono font-black text-white">00:00:00</div>
             </div>
         </div>
@@ -53,7 +53,6 @@
                 </select>
             </div>
             
-            <!-- VISOR DE CRÉDITOS DO ALUNO -->
             <div class="text-center fade-in">
                 <span class="text-xs uppercase font-bold text-slate-400">Seus Créditos de Fala:</span>
                 <div id="student-creditos-display" class="text-2xl font-black text-indigo-600 mt-1">
@@ -61,10 +60,10 @@
                 </div>
             </div>
 
-            <!-- NOVO BLOCO: VISOR DE TEMPO DE FALA -->
-            <div id="bloco-cronometro-fala" class="hidden mb-2 bg-slate-50 border-2 border-slate-200 rounded-2xl p-6 text-center shadow-inner fade-in">
-                <h3 class="text-xs uppercase font-bold text-slate-400 tracking-widest mb-2">Seu Tempo de Fala</h3>
-                <div id="timer-fala-aluno" class="text-5xl font-mono text-emerald-500 transition-colors duration-300">00:00</div>
+            <!-- BLOCO: VISOR DE TEMPO DE FALA (ALUNO) -->
+            <div id="bloco-cronometro-fala" class="hidden mb-2 bg-slate-50 border-2 border-emerald-200 rounded-2xl p-6 text-center shadow-inner fade-in">
+                <h3 class="text-xs uppercase font-bold text-emerald-600 tracking-widest mb-2">Seu Tempo de Fala</h3>
+                <div id="timer-fala-aluno" class="text-6xl font-mono font-black text-emerald-500 transition-colors duration-300">00:00</div>
             </div>
 
             <button id="btn-pedir-palavra" onclick="window.pedirPalavra()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black py-6 rounded-2xl shadow-lg text-lg uppercase transition-all active:scale-95 disabled:bg-slate-300">
@@ -83,21 +82,28 @@
     <div id="tutor-screen" class="hidden flex-col min-h-screen p-4 md:p-6 relative">
         <header class="max-w-7xl mx-auto w-full mb-6 flex flex-col gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
             <div class="flex flex-col md:flex-row justify-between items-center gap-6">
-                <div class="text-center md:text-left">
+                <div class="text-center md:text-left flex-1">
                     <h1 class="text-2xl font-black text-slate-800 tracking-tight">Gestão de Sessão PBL</h1>
                     <p class="text-slate-500 text-sm">Painel do Coordenador <button onclick="window.sair()" class="ml-2 text-indigo-500 hover:underline">Sair</button></p>
                 </div>
 
-                <div class="flex flex-col items-center bg-slate-50 border border-slate-200 rounded-xl p-4 min-w-[280px] shadow-inner">
-                    <span class="text-[10px] uppercase font-bold text-slate-400 tracking-[0.2em] mb-1">Cronômetro</span>
-                    <div id="tutor-timer" class="text-4xl font-mono font-black text-indigo-600 mb-3">00:00:00</div>
+                <!-- BLOCO: VISOR DE TEMPO DE FALA (COORDENADOR) -->
+                <div id="bloco-orador-tutor" class="hidden flex-col items-center bg-emerald-50 border-2 border-emerald-300 rounded-xl p-4 min-w-[220px] shadow-md fade-in">
+                    <span class="text-[10px] uppercase font-bold text-emerald-700 tracking-[0.1em] mb-1 text-center">🎤 Falando: <span id="nome-orador-tutor" class="font-black"></span></span>
+                    <div id="timer-orador-tutor" class="text-5xl font-mono font-black text-emerald-600 mb-2 transition-colors duration-300">00:00</div>
+                    <button onclick="window.pararFala()" class="w-full bg-amber-500 text-white text-xs font-black py-2 rounded-lg hover:bg-amber-600 shadow-sm uppercase tracking-wider">⏸️ Interromper</button>
+                </div>
+
+                <div class="flex flex-col items-center bg-slate-50 border border-slate-200 rounded-xl p-4 min-w-[200px] shadow-inner">
+                    <span class="text-[10px] uppercase font-bold text-slate-400 tracking-[0.2em] mb-1">Cronômetro Global</span>
+                    <div id="tutor-timer" class="text-3xl font-mono font-black text-indigo-600 mb-3">00:00:00</div>
                     <div class="flex gap-2 w-full">
                         <button id="btn-iniciar" onclick="window.iniciarTutoria()" class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-3 rounded-lg shadow-sm text-xs uppercase transition-all">Iniciar</button>
                         <button id="btn-terminar" onclick="window.terminarTutoria()" disabled class="flex-1 bg-slate-200 text-slate-400 font-bold py-2 px-3 rounded-lg shadow-sm text-xs uppercase">Pausar</button>
                     </div>
                 </div>
 
-                <div class="flex flex-col sm:flex-row gap-2 items-center">
+                <div class="flex flex-col sm:flex-row gap-2 items-center flex-wrap justify-end">
                     <div class="flex items-center gap-2 bg-indigo-50 px-3 py-2 rounded-xl border border-indigo-200 h-full">
                         <label for="input-creditos" class="text-[10px] font-black text-indigo-800 uppercase tracking-widest">Créditos:</label>
                         <input type="number" id="input-creditos" class="w-12 p-1 rounded border border-indigo-300 text-center font-bold text-indigo-700 outline-none" min="1" value="3">
@@ -253,7 +259,7 @@
             const dStd = document.getElementById('student-timer');
             
             const tick = () => {
-                // Relógio principal
+                // Relógio Global
                 let total = state.timer.segundosAcumulados;
                 if (state.timer.ativo) {
                     total += Math.floor((Date.now() - state.timer.startTime) / 1000);
@@ -262,31 +268,42 @@
                 if(dTut) dTut.innerText = str;
                 if(dStd) dStd.innerText = str;
 
-                // Relógio da fala atual
+                // Relógio do Orador Atual
                 if (state.oradorAtual) {
                     const passados = Math.floor((Date.now() - state.oradorAtual.startTime) / 1000);
                     const m = Math.floor(passados / 60);
                     const s = passados % 60;
                     const tempoStr = `${m < 10 ? '0'+m : m}:${s < 10 ? '0'+s : s}`;
+                    const isAlert = passados >= 210; // 3 minutos e 30 segundos
 
-                    // Atualiza visor na tela do Aluno (se for o orador)
+                    // Visor do Aluno
                     if (state.oradorAtual.id == usuarioAtual) {
-                        const dFala = document.getElementById('timer-fala-aluno');
-                        if (dFala) {
-                            dFala.innerText = tempoStr;
-                            if (passados >= 210) { // 3:30
-                                dFala.className = "text-5xl font-mono font-black text-rose-600 transition-colors duration-300";
-                            } else {
-                                dFala.className = "text-5xl font-mono text-emerald-500 transition-colors duration-300";
-                            }
+                        const dFalaAluno = document.getElementById('timer-fala-aluno');
+                        if (dFalaAluno) {
+                            dFalaAluno.innerText = tempoStr;
+                            dFalaAluno.className = isAlert 
+                                ? "text-6xl font-mono font-black text-rose-600 transition-colors duration-300" 
+                                : "text-6xl font-mono font-black text-emerald-500 transition-colors duration-300";
                         }
                     }
 
-                    // Atualiza miniatura no painel do Tutor
-                    const dTutorFala = document.getElementById(`tutor-timer-fala-${state.oradorAtual.id}`);
-                    if (dTutorFala) {
-                        dTutorFala.innerText = tempoStr;
-                        if(passados >= 210) dTutorFala.classList.add('text-rose-600');
+                    // Visor Destaque do Coordenador
+                    const dFalaTutorDestaque = document.getElementById('timer-orador-tutor');
+                    if (dFalaTutorDestaque) {
+                        dFalaTutorDestaque.innerText = tempoStr;
+                        dFalaTutorDestaque.className = isAlert 
+                            ? "text-5xl font-mono font-black text-rose-600 mb-2 transition-colors duration-300" 
+                            : "text-5xl font-mono font-black text-emerald-600 mb-2 transition-colors duration-300";
+                    }
+
+                    // Miniatura na lista de alunos do Coordenador
+                    const dFalaTutorMini = document.getElementById(`tutor-timer-fala-${state.oradorAtual.id}`);
+                    if (dFalaTutorMini) {
+                        dFalaTutorMini.innerText = tempoStr;
+                        if(isAlert) {
+                            dFalaTutorMini.classList.remove('text-emerald-600', 'border-emerald-200');
+                            dFalaTutorMini.classList.add('text-rose-600', 'border-rose-200');
+                        }
                     }
                 }
             };
@@ -352,9 +369,7 @@
             if(fila) {
                 fila.alunosId = fila.alunosId.filter(id => id != alunoId);
                 
-                // Se o aluno que teve a fala contabilizada for o orador atual
                 if(state.oradorAtual && state.oradorAtual.id === alunoId) {
-                    // Passa para o próximo da fila automaticamente se houver
                     if (fila.alunosId.length > 0) {
                         state.oradorAtual = { id: fila.alunosId[0], startTime: Date.now() };
                     } else {
@@ -400,11 +415,19 @@
         };
 
         window.pedirPalavra = () => {
+            const idInt = parseInt(usuarioAtual);
+            
+            const jaEstaEmAlgumaFila = state.filas.some(f => f.alunosId.includes(idInt));
+            if (jaEstaEmAlgumaFila) {
+                alert("Acesso Negado: Você já está aguardando em uma fila. Só é permitido estar em um slide por vez.");
+                return;
+            }
+
             if(!alunoFilaSelecionadaId) alunoFilaSelecionadaId = state.filas[0]?.id;
             const fila = state.filas.find(f => f.id === alunoFilaSelecionadaId);
             
-            if(fila && !fila.alunosId.includes(parseInt(usuarioAtual))) {
-                fila.alunosId.push(parseInt(usuarioAtual));
+            if(fila && !fila.alunosId.includes(idInt)) {
+                fila.alunosId.push(idInt);
                 sincronizar();
             }
         };
@@ -421,6 +444,18 @@
 
         function renderTutor() {
             document.getElementById('input-creditos').value = state.maxCreditos || 3;
+
+            // Gerencia Bloco Destaque do Orador no Header
+            const blocoOradorTutor = document.getElementById('bloco-orador-tutor');
+            if (state.oradorAtual) {
+                blocoOradorTutor.classList.remove('hidden');
+                blocoOradorTutor.classList.add('flex');
+                const alunoFalando = alunosListaFixa.find(a => a.id === state.oradorAtual.id);
+                document.getElementById('nome-orador-tutor').innerText = alunoFalando ? alunoFalando.nome : 'Desconhecido';
+            } else {
+                blocoOradorTutor.classList.add('hidden');
+                blocoOradorTutor.classList.remove('flex');
+            }
 
             const sel = document.getElementById('fila-alvo-select');
             sel.innerHTML = state.filas.map(f => `<option value="${f.id}" ${f.id===state.filaAlvoId?'selected':''}>${f.nome}</option>`).join('');
@@ -449,21 +484,20 @@
                 const isOrador = state.oradorAtual && state.oradorAtual.id === a.id;
                 
                 return `
-                    <div class="flex items-center justify-between p-3 mb-2 rounded-xl border ${isOrador ? 'bg-emerald-50 border-emerald-300 ring-2 ring-emerald-400' : (isIn ? 'bg-indigo-50 border-indigo-300' : 'bg-white')}">
-                        <span class="font-bold text-slate-700">${a.nome}</span>
+                    <div class="flex items-center justify-between p-3 mb-2 rounded-xl border ${isOrador ? 'bg-emerald-50 border-emerald-400 ring-2 ring-emerald-200' : (isIn ? 'bg-indigo-50 border-indigo-300' : 'bg-white')}">
+                        <span class="font-bold ${isOrador ? 'text-emerald-800' : 'text-slate-700'}">${a.nome}</span>
                         <div class="flex items-center gap-2">
                             <span class="text-[10px] font-black bg-blue-50 text-blue-600 px-2 py-1 rounded">FALAS: ${falas}/${state.maxCreditos}</span>
                             
-                            ${isIn && !isOrador ? `<button onclick="window.iniciarFala(${a.id})" class="bg-blue-500 text-white p-1.5 rounded hover:bg-blue-600" title="Dar a palavra (Iniciar Timer)">🎤</button>` : ''}
+                            ${isIn && !isOrador ? `<button onclick="window.iniciarFala(${a.id})" class="bg-blue-500 text-white p-1.5 rounded hover:bg-blue-600 shadow-sm" title="Dar a palavra (Iniciar Timer)">🎤</button>` : ''}
                             
                             ${isOrador ? `
                                 <span id="tutor-timer-fala-${a.id}" class="text-xs font-mono font-black text-emerald-600 bg-white border border-emerald-200 px-2 py-1.5 rounded">00:00</span>
-                                <button onclick="window.pararFala()" class="bg-amber-500 text-white p-1.5 rounded hover:bg-amber-600" title="Pausar Timer">⏸️</button>
                             ` : ''}
 
                             ${isIn ? `
-                                <button onclick="window.contabilizarFala(${a.id})" class="bg-emerald-500 text-white p-1.5 rounded hover:bg-emerald-600" title="Contabilizar e Passar a Palavra">✅</button>
-                                <button onclick="window.removerDaFila(${a.id})" class="bg-rose-500 text-white p-1.5 rounded hover:bg-rose-600" title="Remover da fila">❌</button>
+                                <button onclick="window.contabilizarFala(${a.id})" class="bg-emerald-500 text-white p-1.5 rounded hover:bg-emerald-600 shadow-sm" title="Contabilizar e Passar a Palavra">✅</button>
+                                <button onclick="window.removerDaFila(${a.id})" class="bg-rose-500 text-white p-1.5 rounded hover:bg-rose-600 shadow-sm" title="Remover da fila sem contabilizar">❌</button>
                             ` : ''}
                         </div>
                     </div>`;
@@ -479,9 +513,9 @@
 
                 return `
                     <div class="bg-white border rounded-xl mb-4 overflow-hidden shadow-sm">
-                        <div class="bg-slate-100 p-3 font-black text-slate-700 border-b flex justify-between">
+                        <div class="bg-slate-100 p-3 font-black text-slate-700 border-b flex justify-between items-center">
                             ${f.nome}
-                            <span class="bg-indigo-600 text-white text-xs px-2 py-1 rounded">${f.alunosId.length} na fila</span>
+                            <span class="bg-indigo-600 text-white text-xs px-2 py-1 rounded-full">${f.alunosId.length} na fila</span>
                         </div>
                         <div class="flex flex-col">${alunosFila || '<div class="p-4 text-center text-slate-400 text-sm">Fila vazia</div>'}</div>
                     </div>`;
@@ -504,14 +538,13 @@
                 lista.innerHTML = filaAt.alunosId.map((id, idx) => {
                     const al = alunosListaFixa.find(a => a.id == id);
                     const isMe = id == usuarioAtual;
-                    const falando = state.oradorAtual && state.oradorAtual.id === id ? '<span class="float-right text-[10px] bg-emerald-500 text-white px-2 py-0.5 rounded-full uppercase tracking-wider">Falando</span>' : '';
-                    return `<div class="p-2 rounded ${isMe ? 'bg-indigo-100 font-bold text-indigo-700' : 'bg-white border'}">${idx+1}. ${al?.nome} ${isMe?'(Você)':''} ${falando}</div>`;
+                    const falando = state.oradorAtual && state.oradorAtual.id === id ? '<span class="float-right text-[10px] bg-emerald-500 text-white px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse">Falando</span>' : '';
+                    return `<div class="p-3 rounded-lg ${isMe ? 'bg-indigo-100 font-bold text-indigo-700 border border-indigo-200' : 'bg-white border'}">${idx+1}. ${al?.nome} ${isMe?'(Você)':''} ${falando}</div>`;
                 }).join('');
             } else {
-                lista.innerHTML = `<div class="text-slate-400 text-center italic text-sm">Ninguém na fila</div>`;
+                lista.innerHTML = `<div class="text-slate-400 text-center italic text-sm p-2">Ninguém na fila</div>`;
             }
 
-            // Créditos
             const falasUsadas = state.alunosFalas[usuarioAtual] || 0;
             const max = state.maxCreditos || 3;
             const creditosRestantes = max - falasUsadas;
@@ -524,7 +557,6 @@
                 else displayCreditos.className = "text-2xl font-black text-indigo-600 mt-1";
             }
 
-            // Exibição condicional do bloco de Cronômetro de Fala
             const blocoCronometro = document.getElementById('bloco-cronometro-fala');
             if (state.oradorAtual && state.oradorAtual.id == usuarioAtual) {
                 blocoCronometro.classList.remove('hidden');
@@ -534,19 +566,25 @@
                 blocoCronometro.classList.remove('flex', 'flex-col');
             }
 
-            // Lógica do botão Pedir a Palavra
             const btnPedir = document.getElementById('btn-pedir-palavra');
             if (btnPedir) {
-                const jaNaFila = filaAt?.alunosId.includes(parseInt(usuarioAtual));
+                let nomeFilaInscrito = null;
+                const estaEmAlgumaFila = state.filas.some(f => {
+                    if (f.alunosId.includes(parseInt(usuarioAtual))) {
+                        nomeFilaInscrito = f.nome;
+                        return true;
+                    }
+                    return false;
+                });
                 
                 if (creditosRestantes <= 0) {
                     btnPedir.disabled = true;
                     btnPedir.className = "w-full bg-slate-300 text-slate-500 font-black py-6 rounded-2xl shadow-inner text-lg uppercase cursor-not-allowed";
                     btnPedir.innerHTML = "🚫 Créditos Esgotados";
-                } else if (jaNaFila) {
+                } else if (estaEmAlgumaFila) {
                     btnPedir.disabled = true;
-                    btnPedir.className = "w-full bg-indigo-200 text-indigo-500 font-black py-6 rounded-2xl text-lg uppercase cursor-not-allowed";
-                    btnPedir.innerHTML = "✔️ Você já está na fila";
+                    btnPedir.className = "w-full bg-indigo-200 text-indigo-600 font-black py-6 rounded-2xl text-base md:text-lg uppercase cursor-not-allowed shadow-inner";
+                    btnPedir.innerHTML = `✔️ Já na fila: ${nomeFilaInscrito}`;
                 } else {
                     btnPedir.disabled = false;
                     btnPedir.className = "w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black py-6 rounded-2xl shadow-lg text-lg uppercase transition-all active:scale-95";
