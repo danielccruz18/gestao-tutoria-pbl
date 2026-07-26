@@ -3,161 +3,249 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>PBL Multiplayer – Remake</title>
+    <title>PBL Multiplayer — Design Refinado</title>
+    <!-- Google Fonts (Inter) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet" />
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Estilos globais e animações */
         * {
             box-sizing: border-box;
         }
         body {
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: #f1f5f9;
+            color: #0f172a;
         }
-        .fade-in {
-            animation: fadeIn 0.25s ease-in-out;
+        /* Scroll elegante */
+        .scroll-elegant::-webkit-scrollbar {
+            width: 4px;
         }
-        @keyframes fadeIn {
+        .scroll-elegant::-webkit-scrollbar-track {
+            background: #e9edf2;
+            border-radius: 20px;
+        }
+        .scroll-elegant::-webkit-scrollbar-thumb {
+            background: #b9c4d0;
+            border-radius: 20px;
+        }
+        .scroll-elegant::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Animações */
+        .fade-in-up {
+            animation: fadeInUp 0.25s ease-out;
+        }
+        @keyframes fadeInUp {
             0% {
                 opacity: 0;
-                transform: translateY(-6px);
+                transform: translateY(6px);
             }
             100% {
                 opacity: 1;
                 transform: translateY(0);
             }
         }
-        .pulse-ring {
-            animation: pulseRing 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        .pulse-soft {
+            animation: pulseSoft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
-        @keyframes pulseRing {
+        @keyframes pulseSoft {
             0%,
             100% {
-                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+                box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.3);
             }
             50% {
-                box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
+                box-shadow: 0 0 0 8px rgba(99, 102, 241, 0);
             }
         }
-        .scrollbar-thin::-webkit-scrollbar {
-            width: 5px;
+        .timer-digit {
+            font-variant-numeric: tabular-nums;
+            letter-spacing: 0.05em;
         }
-        .scrollbar-thin::-webkit-scrollbar-track {
+
+        /* Cards com vidro fosco (glassmorphism) */
+        .glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        /* Transições suaves */
+        .transition-ease {
+            transition: all 0.2s ease-in-out;
+        }
+
+        /* Botão principal com gradiente */
+        .btn-primary {
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: white;
+            font-weight: 700;
+            border: none;
+            transition: transform 0.15s, box-shadow 0.2s;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px -8px rgba(79, 70, 229, 0.4);
+        }
+        .btn-primary:active {
+            transform: scale(0.97);
+        }
+
+        /* Badge de créditos */
+        .badge-credit {
+            background: #eef2ff;
+            color: #4f46e5;
+            border-radius: 9999px;
+            padding: 0.125rem 0.75rem;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+
+        /* Inputs com foco suave */
+        .input-focus:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+            outline: none;
+        }
+
+        /* Orador ativo destaque */
+        .orator-card {
+            background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+            border: 2px solid #34d399;
+            box-shadow: 0 8px 24px -6px rgba(52, 211, 153, 0.3);
+        }
+
+        /* Mensagem de sistema no chat */
+        .chat-system {
             background: #f1f5f9;
-            border-radius: 10px;
+            color: #64748b;
+            font-size: 0.7rem;
+            text-align: center;
+            padding: 0.3rem 0.8rem;
+            border-radius: 9999px;
+            display: inline-block;
+            margin: 0 auto;
         }
-        .scrollbar-thin::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 10px;
-        }
-        .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-        }
-        /* Esconde o select do aluno quando não houver opções */
-        .hidden-select {
-            display: none;
-        }
-        /* Transição suave para o timer de fala */
-        .timer-fala {
-            transition: color 0.3s, background-color 0.3s;
+
+        /* Responsividade extra */
+        @media (max-width: 640px) {
+            .glass {
+                backdrop-filter: none;
+                background: white;
+            }
+            .btn-primary:hover {
+                transform: none;
+            }
         }
     </style>
 </head>
-<body class="bg-slate-100 antialiased min-h-screen flex flex-col">
+<body>
 
     <!-- ========== TELA DE LOGIN ========== -->
-    <div id="login-screen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4">
-        <div class="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full">
-            <h1 class="text-3xl font-black text-slate-800 text-center">🎓 PBL Multiplayer</h1>
-            <p class="text-slate-500 text-center text-sm mt-1 mb-6">Identifique-se para entrar na sessão</p>
-            <select id="user-select" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 transition">
+    <div id="login-screen" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="background: radial-gradient(ellipse at 30% 20%, #e0e7ff, #c7d2fe, #a5b4fc);">
+        <div class="glass rounded-3xl shadow-2xl p-8 max-w-md w-full backdrop-blur-xl border border-white/40">
+            <div class="text-center">
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-indigo-100 rounded-2xl text-indigo-600 text-3xl mb-4 shadow-inner">🎓</div>
+                <h1 class="text-3xl font-black text-slate-800 tracking-tight">PBL Multiplayer</h1>
+                <p class="text-slate-500 text-sm mt-1 mb-6">Entre na sessão colaborativa</p>
+            </div>
+            <select id="user-select" class="w-full bg-white/80 border border-slate-200 rounded-xl p-3.5 font-semibold text-slate-700 outline-none input-focus transition shadow-sm">
                 <option value="">— Selecione seu nome —</option>
                 <option value="COORDENADOR">👑 Coordenador (Admin)</option>
             </select>
-            <button id="btn-entrar" onclick="app.entrar()" class="mt-4 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-md transition-all active:scale-[0.98]">
+            <button id="btn-entrar" onclick="app.entrar()" class="btn-primary w-full mt-5 py-3.5 rounded-xl text-base shadow-lg">
                 Entrar na Sessão
             </button>
         </div>
     </div>
 
     <!-- ========== TELA DO ALUNO ========== -->
-    <div id="student-screen" class="hidden flex-col max-w-lg mx-auto w-full bg-white shadow-xl min-h-[100dvh] relative">
-        <!-- Cabeçalho -->
-        <div class="bg-gradient-to-r from-indigo-600 to-indigo-700 p-6 text-white rounded-b-3xl shadow-md shrink-0">
-            <p class="text-xs font-bold text-indigo-200 uppercase tracking-widest">Logado como</p>
-            <h1 id="student-name-display" class="text-2xl font-black mt-0.5">Aluno</h1>
-            <div class="mt-3 bg-indigo-800/40 rounded-xl p-3 flex flex-col items-center">
-                <span class="text-[10px] uppercase font-bold text-indigo-300 tracking-[0.2em]">Tempo de Sessão</span>
-                <div id="student-timer" class="text-3xl font-mono font-black">00:00:00</div>
+    <div id="student-screen" class="hidden flex-col max-w-lg mx-auto w-full bg-white/90 backdrop-blur-sm min-h-[100dvh] shadow-xl relative border-x border-slate-200/50">
+        <!-- Cabeçalho com gradiente -->
+        <div class="bg-gradient-to-br from-indigo-600 via-indigo-700 to-indigo-800 p-6 text-white rounded-b-[2.5rem] shadow-lg shrink-0">
+            <div class="flex items-start justify-between">
+                <div>
+                    <p class="text-xs font-medium text-indigo-200/80 uppercase tracking-widest">Logado como</p>
+                    <h1 id="student-name-display" class="text-2xl font-black mt-0.5 tracking-tight">Aluno</h1>
+                </div>
+                <div class="bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2 text-center shadow-inner">
+                    <span class="text-[10px] uppercase font-bold text-indigo-200/80 tracking-[0.15em]">Tempo</span>
+                    <div id="student-timer" class="timer-digit text-2xl font-mono font-black">00:00:00</div>
+                </div>
             </div>
         </div>
 
-        <!-- Corpo (scroll) -->
-        <div class="flex-1 p-5 overflow-y-auto scrollbar-thin flex flex-col gap-4">
+        <!-- Conteúdo rolável -->
+        <div class="flex-1 p-5 overflow-y-auto scroll-elegant space-y-5">
 
-            <!-- Selecionar Slide -->
-            <div>
-                <label class="text-xs uppercase font-bold text-slate-400 block mb-1">Escolha o Slide</label>
-                <select id="student-fila-select" onchange="app.alunoMudarFila(this.value)" class="w-full bg-indigo-50 border border-indigo-200 text-indigo-800 rounded-xl p-3 font-bold outline-none focus:ring-2 focus:ring-indigo-500 text-center">
+            <!-- Selecionar slide -->
+            <div class="bg-slate-50/80 rounded-2xl p-4 border border-slate-200/60 shadow-sm">
+                <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">📌 Slide ativo</label>
+                <select id="student-fila-select" onchange="app.alunoMudarFila(this.value)" class="w-full bg-white border border-slate-200 rounded-xl p-3 font-bold text-slate-700 outline-none input-focus transition text-center">
                 </select>
             </div>
 
             <!-- Créditos -->
-            <div class="text-center">
-                <span class="text-xs uppercase font-bold text-slate-400">Créditos de Fala</span>
-                <div id="student-creditos-display" class="text-3xl font-black text-indigo-600 mt-0.5">3 restantes</div>
+            <div class="bg-gradient-to-br from-indigo-50 to-indigo-100/50 rounded-2xl p-5 text-center border border-indigo-200/60 shadow-sm">
+                <span class="text-[11px] font-bold text-indigo-400 uppercase tracking-wider">🎯 Créditos de fala</span>
+                <div id="student-creditos-display" class="text-4xl font-black text-indigo-600 mt-0.5">3 restantes</div>
             </div>
 
             <!-- Bloco de fala ativa -->
-            <div id="bloco-cronometro-fala" class="hidden bg-slate-50 border-2 border-emerald-300 rounded-2xl p-5 text-center shadow-md fade-in">
-                <h3 class="text-[10px] uppercase font-bold text-emerald-700 tracking-widest">🎤 Falando agora</h3>
+            <div id="bloco-cronometro-fala" class="hidden orator-card rounded-2xl p-5 text-center fade-in-up">
+                <h3 class="text-[11px] font-bold text-emerald-700 uppercase tracking-wider">🎤 Falando agora</h3>
                 <h2 id="nome-orador-aluno" class="text-xl font-black text-slate-800 mt-1 truncate">...</h2>
-                <div id="timer-fala-aluno" class="timer-fala text-5xl font-mono font-black text-emerald-500">00:00</div>
-                <button id="btn-finalizar-fala-aluno" onclick="app.alunoConcluirFala()" class="hidden mt-4 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow-md text-sm uppercase tracking-wider transition-all active:scale-95">
+                <div id="timer-fala-aluno" class="timer-digit text-5xl font-mono font-black text-emerald-500 transition-colors duration-300">00:00</div>
+                <button id="btn-finalizar-fala-aluno" onclick="app.alunoConcluirFala()" class="hidden mt-4 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow-md text-sm uppercase tracking-wider transition-ease active:scale-95">
                     ✅ Concluir minha fala
                 </button>
             </div>
 
-            <!-- Botão principal (pedir / sair da fila) -->
-            <button id="btn-pedir-palavra" class="w-full font-black py-5 rounded-2xl shadow-lg text-lg uppercase transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
+            <!-- Botão principal (pedir / sair) -->
+            <button id="btn-pedir-palavra" class="w-full font-black py-5 rounded-2xl shadow-lg text-lg uppercase transition-ease active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
                 ✋ Pedir a Palavra
             </button>
 
-            <!-- Fila do slide selecionado -->
+            <!-- Fila -->
             <div>
-                <h3 class="text-xs uppercase font-bold text-slate-400 mb-2">Fila de espera</h3>
-                <div id="student-fila-lista" class="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2 min-h-[80px]"></div>
+                <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">⏳ Fila de espera</h3>
+                <div id="student-fila-lista" class="bg-slate-50/80 border border-slate-200/60 rounded-2xl p-3 space-y-2 min-h-[80px] shadow-sm"></div>
             </div>
 
-            <hr class="border-slate-200" />
+            <hr class="border-slate-200/70" />
 
             <!-- Chat Global -->
-            <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-                <div class="bg-slate-100 px-4 py-2 font-bold text-slate-700 border-b text-sm flex items-center gap-2">
-                    💬 Chat Geral
+            <div class="bg-white border border-slate-200/70 rounded-2xl shadow-sm overflow-hidden">
+                <div class="bg-slate-50/80 px-4 py-2.5 font-bold text-slate-700 border-b flex items-center gap-2 text-sm">
+                    <span class="text-indigo-500">💬</span> Chat Geral
                 </div>
-                <div id="chat-global-student" class="h-48 p-3 overflow-y-auto scrollbar-thin space-y-2 bg-slate-50"></div>
-                <div class="p-2 border-t flex gap-2 bg-white">
-                    <input type="text" id="input-chat-global-student" class="flex-1 border rounded-lg p-2 text-sm outline-none focus:border-indigo-500" placeholder="Mensagem para todos..." onkeypress="if(event.key==='Enter') app.enviarChatGlobal('student')" />
-                    <button onclick="app.enviarChatGlobal('student')" class="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-indigo-700 transition text-sm">Enviar</button>
+                <div id="chat-global-student" class="chat-global h-48 p-3 overflow-y-auto scroll-elegant space-y-2 bg-slate-50/40"></div>
+                <div class="p-2.5 border-t flex gap-2 bg-white/80">
+                    <input type="text" id="input-chat-global-student" class="flex-1 border border-slate-200 rounded-xl p-2.5 text-sm outline-none input-focus transition bg-white/70" placeholder="Mensagem para todos..." onkeypress="if(event.key==='Enter') app.enviarChatGlobal('student')" />
+                    <button onclick="app.enviarChatGlobal('student')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl font-bold transition-ease text-sm shadow-sm">Enviar</button>
                 </div>
             </div>
 
             <!-- Sussurros -->
-            <div class="bg-white border border-rose-200 rounded-xl shadow-sm overflow-hidden">
-                <div class="bg-rose-50 px-4 py-2 font-bold text-rose-700 border-b text-sm flex items-center gap-2">
-                    🕵️ Sussurros Anônimos
+            <div class="bg-white border border-rose-200/70 rounded-2xl shadow-sm overflow-hidden">
+                <div class="bg-rose-50/80 px-4 py-2.5 font-bold text-rose-700 border-b flex items-center gap-2 text-sm">
+                    <span class="text-rose-400">🕵️</span> Sussurros Anônimos
                 </div>
-                <div id="chat-sussurro-list" class="h-40 p-3 overflow-y-auto scrollbar-thin space-y-2 bg-rose-50/30"></div>
-                <div class="p-3 border-t space-y-2 bg-white">
+                <div id="chat-sussurro-list" class="h-40 p-3 overflow-y-auto scroll-elegant space-y-2 bg-rose-50/30"></div>
+                <div class="p-3 border-t space-y-2 bg-white/80">
                     <div class="flex flex-col sm:flex-row gap-2">
-                        <select id="sussurro-alvo" class="flex-1 border rounded-lg p-2 text-sm outline-none focus:border-rose-500 font-semibold text-slate-600">
+                        <select id="sussurro-alvo" class="flex-1 border border-slate-200 rounded-xl p-2.5 text-sm outline-none input-focus transition font-semibold text-slate-600 bg-white/70">
                             <option value="">Enviar para quem?</option>
                         </select>
-                        <input type="text" id="sussurro-fake" class="sm:w-1/3 border rounded-lg p-2 text-sm outline-none focus:border-rose-500" placeholder="Nome falso" />
+                        <input type="text" id="sussurro-fake" class="sm:w-1/3 border border-slate-200 rounded-xl p-2.5 text-sm outline-none input-focus transition bg-white/70" placeholder="Nome falso" />
                     </div>
                     <div class="flex gap-2">
-                        <input type="text" id="input-chat-sussurro" class="flex-1 border rounded-lg p-2 text-sm outline-none focus:border-rose-500" placeholder="Mensagem secreta..." onkeypress="if(event.key==='Enter') app.enviarSussurro()" />
-                        <button onclick="app.enviarSussurro()" class="bg-rose-500 text-white px-4 py-2 rounded-lg font-bold hover:bg-rose-600 transition text-sm">Sussurrar</button>
+                        <input type="text" id="input-chat-sussurro" class="flex-1 border border-slate-200 rounded-xl p-2.5 text-sm outline-none input-focus transition bg-white/70" placeholder="Mensagem secreta..." onkeypress="if(event.key==='Enter') app.enviarSussurro()" />
+                        <button onclick="app.enviarSussurro()" class="bg-rose-500 hover:bg-rose-600 text-white px-4 py-2.5 rounded-xl font-bold transition-ease text-sm shadow-sm">Sussurrar</button>
                     </div>
                 </div>
             </div>
@@ -165,47 +253,50 @@
         </div>
 
         <!-- Sair -->
-        <button onclick="app.sair()" class="p-4 text-center text-slate-400 text-xs font-bold hover:text-rose-500 bg-white border-t shrink-0">Sair da conta</button>
+        <button onclick="app.sair()" class="p-4 text-center text-slate-400 text-xs font-bold hover:text-rose-500 bg-white/80 border-t border-slate-200/60 transition-ease shrink-0">Sair da conta</button>
     </div>
 
     <!-- ========== TELA DO COORDENADOR ========== -->
-    <div id="tutor-screen" class="hidden flex-col min-h-screen p-4 md:p-6">
-        <!-- Header -->
-        <header class="max-w-7xl mx-auto w-full bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-6">
+    <div id="tutor-screen" class="hidden flex-col min-h-screen p-4 md:p-6 bg-slate-100/80">
+        <!-- Header com glass -->
+        <header class="max-w-7xl mx-auto w-full glass rounded-3xl shadow-lg border border-white/40 p-6 mb-6 backdrop-blur-xl">
             <div class="flex flex-col lg:flex-row lg:items-center gap-4">
 
                 <!-- Título -->
                 <div class="flex-1">
-                    <h1 class="text-2xl font-black text-slate-800">📋 Gestão PBL</h1>
-                    <p class="text-sm text-slate-500">Coordenador <button onclick="app.sair()" class="ml-2 text-indigo-500 hover:underline">Sair</button></p>
+                    <h1 class="text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2">
+                        <span class="bg-indigo-100 text-indigo-600 p-2 rounded-xl text-xl">📋</span>
+                        Gestão PBL
+                    </h1>
+                    <p class="text-sm text-slate-500">Coordenador <button onclick="app.sair()" class="ml-2 text-indigo-500 hover:text-indigo-700 font-medium transition-ease">Sair</button></p>
                 </div>
 
                 <!-- Bloco Orador Ativo -->
-                <div id="bloco-orador-tutor" class="hidden flex-col items-center bg-emerald-50 border-2 border-emerald-300 rounded-xl p-4 min-w-[200px] shadow-md fade-in">
-                    <span class="text-[10px] uppercase font-bold text-emerald-700 tracking-wide">🎤 Falando: <span id="nome-orador-tutor" class="font-black"></span></span>
-                    <div id="timer-orador-tutor" class="timer-fala text-5xl font-mono font-black text-emerald-600">00:00</div>
-                    <button onclick="app.pararFala()" class="mt-2 w-full bg-amber-500 hover:bg-amber-600 text-white text-xs font-black py-2 rounded-lg shadow-sm uppercase tracking-wider transition">⏸️ Interromper</button>
+                <div id="bloco-orador-tutor" class="hidden orator-card rounded-2xl p-4 min-w-[200px] shadow-md fade-in-up flex-col items-center">
+                    <span class="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">🎤 Falando: <span id="nome-orador-tutor" class="font-black"></span></span>
+                    <div id="timer-orador-tutor" class="timer-digit text-5xl font-mono font-black text-emerald-500 transition-colors duration-300">00:00</div>
+                    <button onclick="app.pararFala()" class="mt-2 w-full bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold py-2 rounded-xl shadow-sm uppercase tracking-wider transition-ease">⏸️ Interromper</button>
                 </div>
 
                 <!-- Cronômetro Global -->
-                <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 min-w-[180px] shadow-inner flex flex-col items-center">
-                    <span class="text-[10px] uppercase font-bold text-slate-400 tracking-[0.2em]">Cronômetro</span>
-                    <div id="tutor-timer" class="text-3xl font-mono font-black text-indigo-600">00:00:00</div>
+                <div class="bg-white/70 backdrop-blur-sm border border-slate-200/60 rounded-2xl p-4 min-w-[180px] shadow-inner flex flex-col items-center">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">⏱️ Cronômetro</span>
+                    <div id="tutor-timer" class="timer-digit text-3xl font-mono font-black text-indigo-600">00:00:00</div>
                     <div class="flex gap-2 w-full mt-2">
-                        <button id="btn-iniciar" onclick="app.iniciarTutoria()" class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-1.5 rounded-lg shadow-sm text-xs uppercase transition">Iniciar</button>
-                        <button id="btn-terminar" onclick="app.terminarTutoria()" disabled class="flex-1 bg-slate-200 text-slate-400 font-bold py-1.5 rounded-lg shadow-sm text-xs uppercase transition cursor-not-allowed">Pausar</button>
+                        <button id="btn-iniciar" onclick="app.iniciarTutoria()" class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-1.5 rounded-xl shadow-sm text-xs uppercase transition-ease">Iniciar</button>
+                        <button id="btn-terminar" onclick="app.terminarTutoria()" disabled class="flex-1 bg-slate-200 text-slate-400 font-bold py-1.5 rounded-xl shadow-sm text-xs uppercase transition-ease cursor-not-allowed">Pausar</button>
                     </div>
                 </div>
 
                 <!-- Ações do Coordenador -->
                 <div class="flex flex-wrap items-center gap-2">
-                    <div class="flex items-center gap-1 bg-indigo-50 px-3 py-2 rounded-xl border border-indigo-200">
-                        <label class="text-[10px] font-black text-indigo-800 uppercase tracking-widest">Créditos:</label>
-                        <input type="number" id="input-creditos" class="w-12 p-1 rounded border border-indigo-300 text-center font-bold text-indigo-700 outline-none" min="1" value="3" />
-                        <button onclick="app.definirCreditos()" class="bg-indigo-600 text-white text-xs font-bold px-2 py-1 rounded hover:bg-indigo-700 transition">OK</button>
+                    <div class="flex items-center gap-1 bg-indigo-50/80 px-3 py-2 rounded-xl border border-indigo-200/60 backdrop-blur-sm">
+                        <label class="text-[10px] font-bold text-indigo-800 uppercase tracking-widest">Créditos:</label>
+                        <input type="number" id="input-creditos" class="w-12 p-1.5 rounded-xl border border-indigo-200/60 text-center font-bold text-indigo-700 outline-none input-focus transition bg-white/70" min="1" value="3" />
+                        <button onclick="app.definirCreditos()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-2.5 py-1.5 rounded-xl transition-ease">OK</button>
                     </div>
-                    <button onclick="app.zerarTudo()" class="bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-600 font-bold px-4 py-2 rounded-xl transition text-sm">🔄 Zerar Sessão</button>
-                    <button onclick="app.criarNovaFila()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-xl shadow-md transition text-sm">➕ Novo Slide</button>
+                    <button onclick="app.zerarTudo()" class="bg-rose-50/80 hover:bg-rose-100/80 border border-rose-200/60 text-rose-600 font-bold px-4 py-2 rounded-xl transition-ease text-sm backdrop-blur-sm">🔄 Zerar</button>
+                    <button onclick="app.criarNovaFila()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-xl shadow-md transition-ease text-sm">➕ Novo Slide</button>
                 </div>
             </div>
         </header>
@@ -213,46 +304,47 @@
         <!-- Main (2 colunas) -->
         <main class="max-w-7xl mx-auto w-full flex flex-col lg:flex-row gap-6 flex-1">
 
-            <!-- Coluna esquerda: Lista de alunos (com fila selecionada) -->
-            <section class="w-full lg:w-5/12 bg-white rounded-2xl shadow-md border border-slate-200 flex flex-col max-h-[70vh] overflow-hidden">
-                <div class="p-4 border-b bg-slate-50 shrink-0">
-                    <h2 class="text-xl font-bold text-slate-800 mb-3">👥 Turma</h2>
-                    <div class="bg-indigo-50 border border-indigo-100 p-3 rounded-xl">
-                        <label class="block text-[10px] font-black text-indigo-800 uppercase tracking-widest mb-1">Visualizando Fila:</label>
-                        <select id="fila-alvo-select" onchange="app.coordenadorMudarFila(this.value)" class="w-full bg-white border border-indigo-200 rounded-lg p-2.5 text-sm font-bold outline-none"></select>
+            <!-- Coluna esquerda: Lista de alunos -->
+            <section class="w-full lg:w-5/12 glass rounded-3xl shadow-lg border border-white/40 flex flex-col max-h-[70vh] overflow-hidden backdrop-blur-xl">
+                <div class="p-5 border-b border-slate-200/60 shrink-0">
+                    <h2 class="text-xl font-bold text-slate-800 mb-3 flex items-center gap-2">
+                        <span class="bg-indigo-100 text-indigo-600 p-1.5 rounded-xl text-sm">👥</span>
+                        Turma
+                    </h2>
+                    <div class="bg-indigo-50/80 border border-indigo-200/60 p-3 rounded-xl">
+                        <label class="block text-[10px] font-bold text-indigo-800 uppercase tracking-widest mb-1">Visualizando Fila:</label>
+                        <select id="fila-alvo-select" onchange="app.coordenadorMudarFila(this.value)" class="w-full bg-white/70 border border-slate-200 rounded-xl p-2.5 text-sm font-bold outline-none input-focus transition"></select>
                     </div>
                 </div>
-                <div id="alunos-container" class="flex-1 p-3 overflow-y-auto scrollbar-thin space-y-2"></div>
+                <div id="alunos-container" class="flex-1 p-3 overflow-y-auto scroll-elegant space-y-2"></div>
             </section>
 
             <!-- Coluna direita: Filas e Chat -->
-            <section class="w-full lg:w-7/12 flex flex-col gap-4 overflow-y-auto scrollbar-thin pr-1 max-h-[70vh]">
+            <section class="w-full lg:w-7/12 flex flex-col gap-4 overflow-y-auto scroll-elegant pr-1 max-h-[70vh]">
 
-                <!-- Lista de todas as filas (slides) -->
+                <!-- Lista de todas as filas -->
                 <div id="filas-container" class="space-y-3"></div>
 
                 <!-- Chat Global (Coordenador) -->
-                <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden shrink-0">
-                    <div class="bg-slate-100 px-4 py-2 font-bold text-slate-700 border-b text-sm flex items-center gap-2">
-                        💬 Chat Geral (Coord)
+                <div class="glass rounded-3xl shadow-lg border border-white/40 overflow-hidden backdrop-blur-xl">
+                    <div class="bg-slate-50/80 px-4 py-2.5 font-bold text-slate-700 border-b border-slate-200/60 flex items-center gap-2 text-sm">
+                        <span class="text-indigo-500">💬</span> Chat Geral (Coord)
                     </div>
-                    <div id="chat-global-tutor" class="h-48 p-3 overflow-y-auto scrollbar-thin space-y-2 bg-slate-50"></div>
-                    <div class="p-2 border-t flex gap-2 bg-white">
-                        <input type="text" id="input-chat-global-tutor" class="flex-1 border rounded-lg p-2 text-sm outline-none focus:border-indigo-500" placeholder="Mensagem do coordenador..." onkeypress="if(event.key==='Enter') app.enviarChatGlobal('tutor')" />
-                        <button onclick="app.enviarChatGlobal('tutor')" class="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-indigo-700 transition text-sm">Enviar</button>
+                    <div id="chat-global-tutor" class="chat-global h-48 p-3 overflow-y-auto scroll-elegant space-y-2 bg-slate-50/30"></div>
+                    <div class="p-2.5 border-t border-slate-200/60 flex gap-2 bg-white/40">
+                        <input type="text" id="input-chat-global-tutor" class="flex-1 border border-slate-200 rounded-xl p-2.5 text-sm outline-none input-focus transition bg-white/70" placeholder="Mensagem do coordenador..." onkeypress="if(event.key==='Enter') app.enviarChatGlobal('tutor')" />
+                        <button onclick="app.enviarChatGlobal('tutor')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl font-bold transition-ease text-sm shadow-sm">Enviar</button>
                     </div>
                 </div>
             </section>
         </main>
     </div>
 
-    <!-- ========== SCRIPT PRINCIPAL (ES Module) ========== -->
+    <!-- ========== SCRIPT (mesmo do remake, apenas ajustado para a nova estrutura) ========== -->
     <script type="module">
-        // Import Firebase
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
-        import { getDatabase, ref, onValue, set, update } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
+        import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
 
-        // --- Configuração do Firebase (substitua pelas suas credenciais) ---
         const firebaseConfig = {
             apiKey: "AIzaSyBNnAmktPtdI204a_gokCud1gYgNiQ8Wbs",
             authDomain: "tutoria-99cfa.firebaseapp.com",
@@ -265,9 +357,8 @@
 
         const appFirebase = initializeApp(firebaseConfig);
         const db = getDatabase(appFirebase);
-        const dbRef = ref(db, 'pbl-state-remake'); // Use um caminho novo para não conflitar
+        const dbRef = ref(db, 'pbl-state-remake');
 
-        // --- Lista fixa de alunos (ordem alfabética) ---
         const ALUNOS = [
             { id: 1, nome: "Ákylla Oliveira" },
             { id: 2, nome: "Beatriz Benvindo" },
@@ -286,19 +377,17 @@
             { id: 15, nome: "Yuri Moura" }
         ].sort((a, b) => a.nome.localeCompare(b.nome));
 
-        // --- Estado global da aplicação ---
         const estadoPadrao = {
             filas: [{ id: "default", nome: "SLIDE INICIAL", alunosId: [] }],
             filaAlvoId: "default",
             timer: { ativo: false, segundosAcumulados: 0, startTime: null },
             maxCreditos: 3,
-            oradorAtual: null, // { id, startTime }
-            alunosFalas: {}, // { id: contagem }
+            oradorAtual: null,
+            alunosFalas: {},
             chatGlobal: [],
             chatPrivado: []
         };
 
-        // --- Classe principal da aplicação ---
         class App {
             constructor() {
                 this.state = JSON.parse(JSON.stringify(estadoPadrao));
@@ -307,7 +396,6 @@
                 this.dadosCarregados = false;
                 this.intervaloTimer = null;
 
-                // Referências DOM
                 this.els = {
                     loginScreen: document.getElementById('login-screen'),
                     studentScreen: document.getElementById('student-screen'),
@@ -315,7 +403,6 @@
                     userSelect: document.getElementById('user-select'),
                 };
 
-                // Preencher select de alunos
                 ALUNOS.forEach(a => {
                     const opt = document.createElement('option');
                     opt.value = a.id;
@@ -323,10 +410,7 @@
                     this.els.userSelect.appendChild(opt);
                 });
 
-                // Iniciar escuta do Firebase
                 this.iniciarEscuta();
-
-                // Atualizar interface inicial
                 this.atualizarVisibilidade();
             }
 
@@ -335,14 +419,11 @@
                 onValue(dbRef, (snapshot) => {
                     if (snapshot.exists()) {
                         const data = snapshot.val();
-                        // Mescla com o padrão para garantir campos
                         this.state = this.mergeEstado(data);
                         this.dadosCarregados = true;
                         this.atualizarTudo();
                     } else {
-                        // Primeira execução: cria o estado inicial
                         this.state = JSON.parse(JSON.stringify(estadoPadrao));
-                        // Inicializa alunosFalas
                         ALUNOS.forEach(a => this.state.alunosFalas[a.id] = 0);
                         this.dadosCarregados = true;
                         this.sincronizar();
@@ -353,9 +434,7 @@
 
             mergeEstado(data) {
                 const base = JSON.parse(JSON.stringify(estadoPadrao));
-                // Mescla de forma segura
                 const merged = { ...base, ...data };
-                // Garante arrays
                 merged.filas = merged.filas || base.filas;
                 merged.filas.forEach(f => { if (!f.alunosId) f.alunosId = []; });
                 merged.alunosFalas = merged.alunosFalas || {};
@@ -367,14 +446,13 @@
 
             sincronizar() {
                 if (!this.dadosCarregados) return;
-                // Não envia o startTime para o Firebase (apenas o acumulado e estado ativo)
                 const dadosParaEnviar = {
                     filas: this.state.filas,
                     filaAlvoId: this.state.filaAlvoId,
                     timer: {
                         ativo: this.state.timer.ativo,
                         segundosAcumulados: this.state.timer.segundosAcumulados,
-                        startTime: null // não persistimos o timestamp
+                        startTime: null
                     },
                     maxCreditos: this.state.maxCreditos,
                     oradorAtual: this.state.oradorAtual,
@@ -385,7 +463,7 @@
                 set(dbRef, dadosParaEnviar);
             }
 
-            // ----- Gerenciamento de usuário -----
+            // ----- Usuário -----
             entrar() {
                 const val = this.els.userSelect.value;
                 if (!val) return alert('Selecione um nome!');
@@ -400,7 +478,6 @@
                 this.usuarioAtual = null;
                 localStorage.removeItem('pbl_user_remake');
                 this.atualizarVisibilidade();
-                // Para o timer local
                 if (this.intervaloTimer) {
                     clearInterval(this.intervaloTimer);
                     this.intervaloTimer = null;
@@ -413,7 +490,6 @@
                     el.classList.add('hidden');
                     el.classList.remove('flex', 'flex-col');
                 });
-
                 if (!this.usuarioAtual) {
                     loginScreen.classList.remove('hidden');
                     loginScreen.classList.add('flex');
@@ -426,36 +502,33 @@
                 }
             }
 
-            // ----- Atualização geral da interface -----
-            atualizarTudo() {
-                if (!this.usuarioAtual) return;
-                if (this.usuarioAtual === 'COORDENADOR') {
-                    this.renderizarCoordenador();
-                } else {
-                    this.renderizarAluno();
-                }
-                this.renderizarChats();
-                this.gerenciarTimerLocal();
+            // ----- Timer -----
+            formatarTempo(s) {
+                const h = Math.floor(s / 3600);
+                const m = Math.floor((s % 3600) / 60);
+                const seg = s % 60;
+                return [h, m, seg].map(v => String(v).padStart(2, '0')).join(':');
+            }
+            formatarTempoMinSeg(s) {
+                const m = Math.floor(s / 60);
+                const seg = s % 60;
+                return `${String(m).padStart(2, '0')}:${String(seg).padStart(2, '0')}`;
             }
 
-            // ----- Timer local (atualiza a cada segundo) -----
             gerenciarTimerLocal() {
                 if (this.intervaloTimer) clearInterval(this.intervaloTimer);
-
                 const tick = () => {
-                    let totalSegundos = this.state.timer.segundosAcumulados;
+                    let total = this.state.timer.segundosAcumulados;
                     if (this.state.timer.ativo && this.state.timer.startTime) {
-                        totalSegundos += Math.floor((Date.now() - this.state.timer.startTime) / 1000);
+                        total += Math.floor((Date.now() - this.state.timer.startTime) / 1000);
                     }
-                    const str = this.formatarTempo(totalSegundos);
+                    const str = this.formatarTempo(total);
                     document.querySelectorAll('.timer-global').forEach(el => el.textContent = str);
 
-                    // Timer de fala do orador
                     if (this.state.oradorAtual) {
                         const passados = Math.floor((Date.now() - this.state.oradorAtual.startTime) / 1000);
                         const strFala = this.formatarTempoMinSeg(passados);
-                        const isAlert = passados >= 210; // 3min 30s
-
+                        const isAlert = passados >= 210;
                         document.querySelectorAll('.timer-fala').forEach(el => {
                             el.textContent = strFala;
                             if (isAlert) {
@@ -466,43 +539,23 @@
                                 el.classList.add('text-emerald-500', 'text-emerald-600');
                             }
                         });
-
-                        // Se passou 3min, podemos notificar (aqui apenas visual)
                     }
                 };
-
                 this.intervaloTimer = setInterval(tick, 1000);
-                tick(); // chamada imediata
+                tick();
             }
 
-            formatarTempo(s) {
-                const h = Math.floor(s / 3600);
-                const m = Math.floor((s % 3600) / 60);
-                const seg = s % 60;
-                return [h, m, seg].map(v => String(v).padStart(2, '0')).join(':');
-            }
-
-            formatarTempoMinSeg(s) {
-                const m = Math.floor(s / 60);
-                const seg = s % 60;
-                return `${String(m).padStart(2, '0')}:${String(seg).padStart(2, '0')}`;
-            }
-
-            // ----- Ações do Coordenador -----
+            // ----- Ações Coordenador -----
             coordenadorMudarFila(id) {
                 this.state.filaAlvoId = id;
                 this.sincronizar();
                 this.renderizarCoordenador();
             }
-
             definirCreditos() {
                 const val = parseInt(document.getElementById('input-creditos').value);
-                if (val > 0) {
-                    this.state.maxCreditos = val;
-                    this.sincronizar();
-                }
+                if (val > 0) { this.state.maxCreditos = val;
+                    this.sincronizar(); }
             }
-
             criarNovaFila() {
                 const nome = prompt('Nome do novo slide:');
                 if (nome) {
@@ -512,73 +565,40 @@
                     this.sincronizar();
                 }
             }
-
             removerFila(id) {
-                if (this.state.filas.length <= 1) return alert('Você precisa ter pelo menos um slide.');
-                if (!confirm('Excluir este slide e remover os alunos da fila?')) return;
+                if (this.state.filas.length <= 1) return alert('Mantenha pelo menos um slide.');
+                if (!confirm('Excluir este slide?')) return;
                 this.state.filas = this.state.filas.filter(f => f.id !== id);
                 if (this.state.filaAlvoId === id) this.state.filaAlvoId = this.state.filas[0].id;
                 this.sincronizar();
             }
-
-            // Dar a palavra para um aluno (iniciar fala)
             iniciarFala(alunoId) {
-                // Verifica se o aluno está na fila alvo
                 const fila = this.state.filas.find(f => f.id === this.state.filaAlvoId);
-                if (!fila || !fila.alunosId.includes(alunoId)) {
-                    alert('Aluno não está na fila selecionada.');
-                    return;
-                }
-                // Se já houver orador, para antes
-                if (this.state.oradorAtual) {
-                    // Contabiliza automaticamente a fala anterior
-                    this.contabilizarFala(this.state.oradorAtual.id, true);
-                }
+                if (!fila || !fila.alunosId.includes(alunoId)) return alert('Aluno não está na fila.');
+                if (this.state.oradorAtual) this.contabilizarFala(this.state.oradorAtual.id, true);
                 this.state.oradorAtual = { id: alunoId, startTime: Date.now() };
                 this.sincronizar();
             }
-
-            // Parar fala (sem contabilizar)
             pararFala() {
-                if (this.state.oradorAtual) {
-                    this.state.oradorAtual = null;
-                    this.sincronizar();
-                }
+                if (this.state.oradorAtual) { this.state.oradorAtual = null;
+                    this.sincronizar(); }
             }
-
-            // Contabilizar uma fala e remover da fila
-            contabilizarFala(alunoId, removerDaFila = true) {
+            contabilizarFala(alunoId, remover = true) {
                 if (!this.state.alunosFalas[alunoId]) this.state.alunosFalas[alunoId] = 0;
                 this.state.alunosFalas[alunoId]++;
-
-                // Remover da fila onde estiver
-                if (removerDaFila) {
-                    this.state.filas.forEach(f => {
-                        f.alunosId = f.alunosId.filter(id => id !== alunoId);
-                    });
+                if (remover) {
+                    this.state.filas.forEach(f => f.alunosId = f.alunosId.filter(id => id !== alunoId));
                 }
-
-                // Se era o orador, remove
-                if (this.state.oradorAtual && this.state.oradorAtual.id === alunoId) {
-                    this.state.oradorAtual = null;
-                }
+                if (this.state.oradorAtual && this.state.oradorAtual.id === alunoId) this.state.oradorAtual = null;
                 this.sincronizar();
             }
-
-            // Remover da fila sem contabilizar
             removerDaFila(alunoId) {
-                this.state.filas.forEach(f => {
-                    f.alunosId = f.alunosId.filter(id => id !== alunoId);
-                });
-                if (this.state.oradorAtual && this.state.oradorAtual.id === alunoId) {
-                    this.state.oradorAtual = null;
-                }
+                this.state.filas.forEach(f => f.alunosId = f.alunosId.filter(id => id !== alunoId));
+                if (this.state.oradorAtual && this.state.oradorAtual.id === alunoId) this.state.oradorAtual = null;
                 this.sincronizar();
             }
-
-            // Zerar tudo
             zerarTudo() {
-                if (!confirm('Tem certeza? Isso apagará todas as estatísticas, filas e chats.')) return;
+                if (!confirm('Zerar todas as estatísticas, filas e chats?')) return;
                 this.state = JSON.parse(JSON.stringify(estadoPadrao));
                 ALUNOS.forEach(a => this.state.alunosFalas[a.id] = 0);
                 this.state.filas = [{ id: "default", nome: "SLIDE INICIAL", alunosId: [] }];
@@ -589,14 +609,11 @@
                 this.state.chatPrivado = [];
                 this.sincronizar();
             }
-
-            // Controles do cronômetro global
             iniciarTutoria() {
                 this.state.timer.ativo = true;
                 this.state.timer.startTime = Date.now();
                 this.sincronizar();
             }
-
             terminarTutoria() {
                 if (!this.state.timer.ativo) return;
                 const passados = Math.floor((Date.now() - this.state.timer.startTime) / 1000);
@@ -606,58 +623,31 @@
                 this.sincronizar();
             }
 
-            // ----- Ações do Aluno -----
-            alunoMudarFila(id) {
-                this.alunoFilaSelecionadaId = id;
-                this.renderizarAluno();
-            }
-
+            // ----- Ações Aluno -----
+            alunoMudarFila(id) { this.alunoFilaSelecionadaId = id;
+                this.renderizarAluno(); }
             pedirPalavra() {
                 const idInt = parseInt(this.usuarioAtual);
-                // Verifica se já está em alguma fila
-                const emFila = this.state.filas.some(f => f.alunosId.includes(idInt));
-                if (emFila) {
-                    alert('Você já está aguardando em um slide. Aguarde sua vez ou saia da fila.');
-                    return;
-                }
-                // Verifica créditos
-                const creditosUsados = this.state.alunosFalas[idInt] || 0;
-                if (creditosUsados >= this.state.maxCreditos) {
-                    alert('Você já usou todos os seus créditos de fala.');
-                    return;
-                }
+                if (this.state.filas.some(f => f.alunosId.includes(idInt))) return alert('Você já está na fila.');
+                if ((this.state.alunosFalas[idInt] || 0) >= this.state.maxCreditos) return alert('Créditos esgotados.');
                 if (!this.alunoFilaSelecionadaId) {
-                    if (this.state.filas.length > 0) {
-                        this.alunoFilaSelecionadaId = this.state.filas[0].id;
-                    } else {
-                        alert('Nenhum slide disponível.');
-                        return;
-                    }
+                    if (this.state.filas.length > 0) this.alunoFilaSelecionadaId = this.state.filas[0].id;
+                    else return alert('Nenhum slide disponível.');
                 }
                 const fila = this.state.filas.find(f => f.id === this.alunoFilaSelecionadaId);
-                if (!fila) return alert('Slide não encontrado.');
-                if (!fila.alunosId.includes(idInt)) {
-                    fila.alunosId.push(idInt);
-                    this.sincronizar();
-                }
+                if (!fila) return;
+                if (!fila.alunosId.includes(idInt)) { fila.alunosId.push(idInt);
+                    this.sincronizar(); }
             }
-
             sairDaFila() {
                 const idInt = parseInt(this.usuarioAtual);
-                this.state.filas.forEach(f => {
-                    f.alunosId = f.alunosId.filter(id => id !== idInt);
-                });
-                if (this.state.oradorAtual && this.state.oradorAtual.id === idInt) {
-                    this.state.oradorAtual = null;
-                }
+                this.state.filas.forEach(f => f.alunosId = f.alunosId.filter(id => id !== idInt));
+                if (this.state.oradorAtual && this.state.oradorAtual.id === idInt) this.state.oradorAtual = null;
                 this.sincronizar();
             }
-
             alunoConcluirFala() {
                 const idInt = parseInt(this.usuarioAtual);
-                if (this.state.oradorAtual && this.state.oradorAtual.id === idInt) {
-                    this.contabilizarFala(idInt, true);
-                }
+                if (this.state.oradorAtual && this.state.oradorAtual.id === idInt) this.contabilizarFala(idInt, true);
             }
 
             // ----- Chat -----
@@ -673,14 +663,13 @@
                     id: Date.now(),
                     senderId: this.usuarioAtual,
                     senderName: remetente,
-                    text: text,
+                    text,
                     time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
                 });
                 if (this.state.chatGlobal.length > 50) this.state.chatGlobal.shift();
                 input.value = '';
                 this.sincronizar();
             }
-
             enviarSussurro() {
                 const alvo = document.getElementById('sussurro-alvo').value;
                 let fakeName = document.getElementById('sussurro-fake').value.trim() || 'Anônimo';
@@ -691,8 +680,8 @@
                     id: Date.now(),
                     senderId: parseInt(this.usuarioAtual),
                     receiverId: parseInt(alvo),
-                    fakeName: fakeName,
-                    text: text,
+                    fakeName,
+                    text,
                     time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
                 });
                 if (this.state.chatPrivado.length > 100) this.state.chatPrivado.shift();
@@ -700,12 +689,11 @@
                 this.sincronizar();
             }
 
-            // ----- Renderização -----
+            // ----- Renderização (similar ao remake, com classes ajustadas) -----
             renderizarCoordenador() {
                 const el = document.getElementById('input-creditos');
                 if (el) el.value = this.state.maxCreditos || 3;
 
-                // Bloco orador
                 const bloco = document.getElementById('bloco-orador-tutor');
                 if (this.state.oradorAtual) {
                     bloco.classList.remove('hidden');
@@ -717,34 +705,29 @@
                     bloco.classList.remove('flex', 'flex-col');
                 }
 
-                // Select de fila alvo
                 const selFila = document.getElementById('fila-alvo-select');
                 selFila.innerHTML = this.state.filas.map(f =>
                     `<option value="${f.id}" ${f.id === this.state.filaAlvoId ? 'selected' : ''}>${f.nome}</option>`
                 ).join('');
 
-                // Botões do cronômetro
                 const btnIni = document.getElementById('btn-iniciar');
                 const btnPar = document.getElementById('btn-terminar');
                 if (this.state.timer.ativo) {
                     btnIni.disabled = true;
-                    btnIni.className = 'flex-1 bg-slate-200 text-slate-400 font-bold py-1.5 rounded-lg shadow-sm text-xs uppercase cursor-not-allowed';
+                    btnIni.className = 'flex-1 bg-slate-200 text-slate-400 font-bold py-1.5 rounded-xl shadow-sm text-xs uppercase cursor-not-allowed';
                     btnPar.disabled = false;
-                    btnPar.className = 'flex-1 bg-rose-500 hover:bg-rose-600 text-white font-bold py-1.5 rounded-lg shadow-sm text-xs uppercase transition';
+                    btnPar.className = 'flex-1 bg-rose-500 hover:bg-rose-600 text-white font-bold py-1.5 rounded-xl shadow-sm text-xs uppercase transition-ease';
                 } else {
                     btnIni.disabled = false;
-                    btnIni.className = 'flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-1.5 rounded-lg shadow-sm text-xs uppercase transition';
+                    btnIni.className = 'flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-1.5 rounded-xl shadow-sm text-xs uppercase transition-ease';
                     btnPar.disabled = true;
-                    btnPar.className = 'flex-1 bg-slate-200 text-slate-400 font-bold py-1.5 rounded-lg shadow-sm text-xs uppercase cursor-not-allowed';
+                    btnPar.className = 'flex-1 bg-slate-200 text-slate-400 font-bold py-1.5 rounded-xl shadow-sm text-xs uppercase cursor-not-allowed';
                 }
 
-                // Lista de alunos (com ações)
                 const container = document.getElementById('alunos-container');
                 const filaAtual = this.state.filas.find(f => f.id === this.state.filaAlvoId);
-                if (!filaAtual) {
-                    container.innerHTML = '<p class="text-slate-400 text-sm">Selecione uma fila.</p>';
-                    return;
-                }
+                if (!filaAtual) { container.innerHTML =
+                    '<p class="text-slate-400 text-sm text-center py-4">Selecione uma fila.</p>'; return; }
 
                 container.innerHTML = ALUNOS.map(a => {
                     const isIn = filaAtual.alunosId.includes(a.id);
@@ -754,88 +737,84 @@
 
                     let botoes = '';
                     if (isIn && !isOrador) {
-                        botoes += `<button onclick="app.iniciarFala(${a.id})" class="bg-blue-500 hover:bg-blue-600 text-white text-xs px-2 py-1 rounded shadow-sm transition" title="Dar a palavra">🎤</button>`;
+                        botoes +=
+                            `<button onclick="app.iniciarFala(${a.id})" class="bg-blue-500 hover:bg-blue-600 text-white text-xs px-2 py-1 rounded-xl shadow-sm transition-ease" title="Dar a palavra">🎤</button>`;
                     }
                     if (isOrador) {
-                        botoes += `<span class="timer-fala text-xs font-mono font-bold bg-emerald-100 text-emerald-700 px-2 py-1 rounded">00:00</span>`;
+                        botoes +=
+                            `<span class="timer-fala text-xs font-mono font-bold bg-emerald-100 text-emerald-700 px-2 py-1 rounded-xl">00:00</span>`;
                     }
                     if (isIn) {
-                        botoes += `<button onclick="app.contabilizarFala(${a.id}, true)" class="bg-emerald-500 hover:bg-emerald-600 text-white text-xs px-2 py-1 rounded shadow-sm transition" title="Contabilizar e passar">✅</button>`;
-                        botoes += `<button onclick="app.removerDaFila(${a.id})" class="bg-rose-500 hover:bg-rose-600 text-white text-xs px-2 py-1 rounded shadow-sm transition" title="Remover da fila">❌</button>`;
+                        botoes +=
+                            `<button onclick="app.contabilizarFala(${a.id}, true)" class="bg-emerald-500 hover:bg-emerald-600 text-white text-xs px-2 py-1 rounded-xl shadow-sm transition-ease" title="Contabilizar e passar">✅</button>`;
+                        botoes +=
+                            `<button onclick="app.removerDaFila(${a.id})" class="bg-rose-500 hover:bg-rose-600 text-white text-xs px-2 py-1 rounded-xl shadow-sm transition-ease" title="Remover da fila">❌</button>`;
                     }
 
-                    const corBg = isOrador ? 'bg-emerald-50 border-emerald-400 ring-2 ring-emerald-200' :
-                        isIn ? 'bg-indigo-50 border-indigo-300' : 'bg-white';
+                    const corBg = isOrador ? 'bg-emerald-50/80 border-emerald-300 ring-2 ring-emerald-200' :
+                        isIn ? 'bg-indigo-50/80 border-indigo-200' : 'bg-white/70';
 
                     return `
-                        <div class="flex items-center justify-between p-3 rounded-xl border ${corBg} fade-in">
-                            <div class="flex items-center gap-2">
-                                <span class="font-bold text-sm">${a.nome}</span>
-                                <span class="text-[10px] font-bold bg-blue-50 text-blue-600 px-2 py-0.5 rounded">${falas}/${this.state.maxCreditos}</span>
-                                ${creditosRestantes <= 0 ? '<span class="text-[10px] font-bold text-rose-500">🚫</span>' : ''}
+                            <div class="flex items-center justify-between p-3 rounded-xl border ${corBg} fade-in-up backdrop-blur-sm">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-bold text-sm">${a.nome}</span>
+                                    <span class="badge-credit">${falas}/${this.state.maxCreditos}</span>
+                                    ${creditosRestantes <= 0 ? '<span class="text-xs text-rose-500">🚫</span>' : ''}
+                                </div>
+                                <div class="flex items-center gap-1.5 flex-wrap">${botoes}</div>
                             </div>
-                            <div class="flex items-center gap-1.5 flex-wrap">${botoes}</div>
-                        </div>
-                    `;
+                        `;
                 }).join('');
 
-                // Renderizar todas as filas (cards)
                 const containerFilas = document.getElementById('filas-container');
                 containerFilas.innerHTML = this.state.filas.map(f => {
                     const alunosNaFila = f.alunosId.map(id => {
                         const aluno = ALUNOS.find(a => a.id === id);
                         const isOrador = this.state.oradorAtual && this.state.oradorAtual.id === id;
                         const nome = aluno ? aluno.nome : 'Desconhecido';
-                        return `<div class="flex justify-between items-center p-2 border-b last:border-0 text-sm">
+                        return `<div class="flex justify-between items-center p-2.5 border-b last:border-0 text-sm">
                                     <span>${nome} ${isOrador ? '🎤' : ''}</span>
-                                    ${isOrador ? `<span class="timer-fala text-xs font-mono font-bold bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded">00:00</span>` : ''}
+                                    ${isOrador ? `<span class="timer-fala text-xs font-mono font-bold bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-xl">00:00</span>` : ''}
                                 </div>`;
                     }).join('');
 
                     return `
-                        <div class="bg-white border rounded-xl overflow-hidden shadow-sm">
-                            <div class="bg-slate-100 px-4 py-2 font-bold text-slate-700 border-b flex justify-between items-center">
-                                <span>${f.nome} <span class="bg-indigo-600 text-white text-[10px] px-2 py-0.5 rounded-full">${f.alunosId.length}</span></span>
-                                <button onclick="app.removerFila('${f.id}')" class="text-rose-500 hover:text-rose-700 text-xs font-bold">🗑️</button>
+                            <div class="bg-white/70 backdrop-blur-sm border border-slate-200/60 rounded-2xl overflow-hidden shadow-sm">
+                                <div class="bg-slate-50/80 px-4 py-2.5 font-bold text-slate-700 border-b border-slate-200/60 flex justify-between items-center">
+                                    <span>${f.nome} <span class="badge-credit">${f.alunosId.length}</span></span>
+                                    <button onclick="app.removerFila('${f.id}')" class="text-rose-500 hover:text-rose-700 text-xs font-bold transition-ease">🗑️</button>
+                                </div>
+                                <div class="p-2 ${f.alunosId.length === 0 ? 'text-center text-slate-400 text-sm py-4' : ''}">
+                                    ${f.alunosId.length > 0 ? alunosNaFila : 'Fila vazia'}
+                                </div>
                             </div>
-                            <div class="p-2 ${f.alunosId.length === 0 ? 'text-center text-slate-400 text-sm py-4' : ''}">
-                                ${f.alunosId.length > 0 ? alunosNaFila : 'Fila vazia'}
-                            </div>
-                        </div>
-                    `;
+                        `;
                 }).join('');
             }
 
             renderizarAluno() {
-                // Nome
                 const me = ALUNOS.find(a => a.id == this.usuarioAtual);
                 if (me) document.getElementById('student-name-display').textContent = me.nome;
 
-                // Verifica se a fila selecionada ainda existe
                 if (!this.alunoFilaSelecionadaId || !this.state.filas.some(f => f.id === this.alunoFilaSelecionadaId)) {
-                    if (this.state.filas.length > 0) {
-                        this.alunoFilaSelecionadaId = this.state.filas[this.state.filas.length - 1].id;
-                    } else {
-                        this.alunoFilaSelecionadaId = null;
-                    }
+                    if (this.state.filas.length > 0) this.alunoFilaSelecionadaId = this.state.filas[this.state.filas.length -
+                    1].id;
+                    else this.alunoFilaSelecionadaId = null;
                 }
 
-                // Select de slides
                 const sel = document.getElementById('student-fila-select');
                 sel.innerHTML = this.state.filas.map(f =>
                     `<option value="${f.id}" ${f.id === this.alunoFilaSelecionadaId ? 'selected' : ''}>${f.nome}</option>`
                 ).join('');
 
-                // Créditos
                 const falasUsadas = this.state.alunosFalas[this.usuarioAtual] || 0;
                 const max = this.state.maxCreditos || 3;
                 const restantes = max - falasUsadas;
                 const display = document.getElementById('student-creditos-display');
                 display.textContent = `${restantes} restante${restantes !== 1 ? 's' : ''}`;
-                display.className = 'text-3xl font-black mt-0.5 ' +
+                display.className = 'text-4xl font-black mt-0.5 ' +
                     (restantes <= 0 ? 'text-rose-500' : restantes === 1 ? 'text-amber-500' : 'text-indigo-600');
 
-                // Fila
                 const filaAtual = this.state.filas.find(f => f.id === this.alunoFilaSelecionadaId);
                 const lista = document.getElementById('student-fila-lista');
                 if (filaAtual && filaAtual.alunosId.length > 0) {
@@ -845,27 +824,30 @@
                         const isOrador = this.state.oradorAtual && this.state.oradorAtual.id === id;
                         let acao = '';
                         if (isMe && !isOrador) {
-                            // Se for o primeiro da fila e não houver orador, pode iniciar
                             const podeIniciar = idx === 0 && !this.state.oradorAtual;
                             if (podeIniciar) {
-                                acao = `<button onclick="app.iniciarFala(${id})" class="ml-2 bg-blue-500 hover:bg-blue-600 text-white text-[10px] px-2 py-1 rounded shadow-sm">🎤 Iniciar</button>`;
+                                acao =
+                                    `<button onclick="app.iniciarFala(${id})" class="ml-2 bg-blue-500 hover:bg-blue-600 text-white text-[10px] px-2 py-1 rounded-xl shadow-sm">🎤 Iniciar</button>`;
                             } else {
-                                acao = `<span class="ml-2 text-[9px] text-slate-400 font-bold uppercase">Aguarde</span>`;
+                                acao =
+                                    `<span class="ml-2 text-[9px] text-slate-400 font-bold uppercase">Aguarde</span>`;
                             }
                         }
-                        const falando = isOrador ? `<span class="timer-fala ml-2 inline-block font-mono font-black bg-emerald-100 border border-emerald-300 text-emerald-700 px-2 py-0.5 rounded text-[10px]">00:00</span>` : '';
+                        const falando = isOrador ?
+                            `<span class="timer-fala ml-2 inline-block font-mono font-black bg-emerald-100 border border-emerald-300 text-emerald-700 px-2 py-0.5 rounded-xl text-[10px]">00:00</span>` :
+                            '';
                         return `
-                            <div class="p-2 rounded-lg flex justify-between items-center ${isMe ? 'bg-indigo-100 font-bold text-indigo-700 border border-indigo-200' : 'bg-white border'}">
-                                <div class="truncate text-sm">${idx+1}. ${al?.nome} ${isMe ? '(Você)' : ''} ${falando}</div>
-                                ${acao}
-                            </div>
-                        `;
+                                <div class="p-2.5 rounded-xl flex justify-between items-center ${isMe ? 'bg-indigo-100 font-bold text-indigo-700 border border-indigo-200' : 'bg-white/70 border border-slate-200/60'}">
+                                    <div class="truncate text-sm">${idx+1}. ${al?.nome} ${isMe ? '(Você)' : ''} ${falando}</div>
+                                    ${acao}
+                                </div>
+                            `;
                     }).join('');
                 } else {
-                    lista.innerHTML = '<div class="text-slate-400 text-center italic text-sm p-2">Ninguém na fila</div>';
+                    lista.innerHTML =
+                    '<div class="text-slate-400 text-center italic text-sm p-2">Ninguém na fila</div>';
                 }
 
-                // Bloco de fala
                 const bloco = document.getElementById('bloco-cronometro-fala');
                 const nomeOrador = document.getElementById('nome-orador-aluno');
                 const btnFinalizar = document.getElementById('btn-finalizar-fala-aluno');
@@ -873,14 +855,14 @@
                     bloco.classList.remove('hidden');
                     bloco.classList.add('flex', 'flex-col');
                     const orador = ALUNOS.find(a => a.id === this.state.oradorAtual.id);
-                    nomeOrador.textContent = orador ? (orador.id == this.usuarioAtual ? 'VOCÊ' : orador.nome) : 'Desconhecido';
+                    nomeOrador.textContent = orador ? (orador.id == this.usuarioAtual ? 'VOCÊ' : orador.nome) :
+                    'Desconhecido';
                     btnFinalizar.classList.toggle('hidden', this.state.oradorAtual.id != this.usuarioAtual);
                 } else {
                     bloco.classList.add('hidden');
                     bloco.classList.remove('flex', 'flex-col');
                 }
 
-                // Botão principal (pedir/sair)
                 const btn = document.getElementById('btn-pedir-palavra');
                 const idInt = parseInt(this.usuarioAtual);
                 const emFila = this.state.filas.some(f => f.alunosId.includes(idInt));
@@ -888,44 +870,45 @@
 
                 if (creditosRestantesAluno <= 0) {
                     btn.disabled = true;
-                    btn.className = 'w-full bg-slate-300 text-slate-500 font-black py-5 rounded-2xl shadow-inner text-lg uppercase cursor-not-allowed';
+                    btn.className =
+                        'w-full bg-slate-200/80 text-slate-400 font-black py-5 rounded-2xl shadow-inner text-lg uppercase cursor-not-allowed';
                     btn.textContent = '🚫 Créditos esgotados';
                 } else if (emFila) {
                     btn.disabled = false;
                     btn.onclick = () => this.sairDaFila();
-                    btn.className = 'w-full bg-rose-500 hover:bg-rose-600 text-white font-black py-5 rounded-2xl shadow-lg text-sm uppercase transition active:scale-95';
+                    btn.className =
+                        'w-full bg-rose-500 hover:bg-rose-600 text-white font-black py-5 rounded-2xl shadow-lg text-sm uppercase transition-ease active:scale-95';
                     btn.textContent = '❌ Sair da fila';
                 } else {
                     btn.disabled = false;
                     btn.onclick = () => this.pedirPalavra();
-                    btn.className = 'w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black py-5 rounded-2xl shadow-lg text-lg uppercase transition active:scale-95';
+                    btn.className =
+                        'w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black py-5 rounded-2xl shadow-lg text-lg uppercase transition-ease active:scale-95';
                     btn.textContent = '✋ Pedir a Palavra';
                 }
             }
 
             renderizarChats() {
-                // Chat global
                 document.querySelectorAll('.chat-global').forEach(el => {
                     const wasBottom = el.scrollHeight - el.clientHeight <= el.scrollTop + 10;
                     el.innerHTML = this.state.chatGlobal.map(msg => {
                         const isMe = msg.senderId == this.usuarioAtual;
                         const isCoord = msg.senderId === 'COORDENADOR';
                         let bg = isMe ? 'bg-indigo-500 text-white rounded-br-none' :
-                            isCoord ? 'bg-amber-100 border border-amber-300 text-amber-900 rounded-bl-none' :
-                            'bg-white border text-slate-700 rounded-bl-none';
+                            isCoord ? 'bg-amber-100/80 border border-amber-200/60 text-amber-900 rounded-bl-none' :
+                            'bg-white/80 border border-slate-200/60 text-slate-700 rounded-bl-none';
                         return `
-                            <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'} fade-in">
-                                <span class="text-[10px] text-slate-400 font-bold mx-1 mb-0.5">${msg.senderName} • ${msg.time}</span>
-                                <div class="p-2 shadow-sm text-sm max-w-[85%] rounded-xl leading-snug ${bg}">
-                                    ${msg.text}
+                                <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'} fade-in-up">
+                                    <span class="text-[10px] text-slate-400 font-medium mx-1 mb-0.5">${msg.senderName} • ${msg.time}</span>
+                                    <div class="p-2.5 shadow-sm text-sm max-w-[85%] rounded-xl leading-snug ${bg}">
+                                        ${msg.text}
+                                    </div>
                                 </div>
-                            </div>
-                        `;
+                            `;
                     }).join('');
                     if (wasBottom) el.scrollTop = el.scrollHeight;
                 });
 
-                // Sussurros (apenas para aluno)
                 if (this.usuarioAtual !== 'COORDENADOR') {
                     const list = document.getElementById('chat-sussurro-list');
                     if (list) {
@@ -937,18 +920,17 @@
                             const nomeAlvo = ALUNOS.find(a => a.id === msg.receiverId)?.nome || 'Desconhecido';
                             const header = isMe ? `Enviei para: ${nomeAlvo}` : `De: 🕵️ ${msg.fakeName}`;
                             return `
-                                <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'} fade-in">
-                                    <span class="text-[10px] ${isMe ? 'text-rose-400' : 'text-rose-600'} font-bold mx-1 mb-0.5">${header} • ${msg.time}</span>
-                                    <div class="p-2 shadow-sm text-sm max-w-[85%] rounded-xl leading-snug ${isMe ? 'bg-rose-100 border border-rose-300 text-rose-900 rounded-br-none' : 'bg-rose-500 text-white rounded-bl-none'}">
-                                        ${msg.text}
+                                    <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'} fade-in-up">
+                                        <span class="text-[10px] ${isMe ? 'text-rose-400' : 'text-rose-600'} font-medium mx-1 mb-0.5">${header} • ${msg.time}</span>
+                                        <div class="p-2.5 shadow-sm text-sm max-w-[85%] rounded-xl leading-snug ${isMe ? 'bg-rose-100/80 border border-rose-200/60 text-rose-900 rounded-br-none' : 'bg-rose-500 text-white rounded-bl-none'}">
+                                            ${msg.text}
+                                        </div>
                                     </div>
-                                </div>
-                            `;
+                                `;
                         }).join('');
                         if (wasBottom) list.scrollTop = list.scrollHeight;
                     }
 
-                    // Preencher select de alvos para sussurro
                     const sel = document.getElementById('sussurro-alvo');
                     if (sel && sel.options.length <= 1) {
                         ALUNOS.forEach(a => {
@@ -962,16 +944,23 @@
                     }
                 }
             }
+
+            atualizarTudo() {
+                if (!this.usuarioAtual) return;
+                if (this.usuarioAtual === 'COORDENADOR') {
+                    this.renderizarCoordenador();
+                } else {
+                    this.renderizarAluno();
+                }
+                this.renderizarChats();
+                this.gerenciarTimerLocal();
+            }
         }
 
-        // --- Instanciar a aplicação e expor globalmente ---
         const app = new App();
-        window.app = app; // para chamadas inline onclick
-
-        // Ajuste: o botão "Entrar" chama app.entrar()
+        window.app = app;
         document.getElementById('btn-entrar').onclick = () => app.entrar();
-
-        console.log('✅ PBL Multiplayer Remake carregado!');
+        console.log('✅ Design refinado carregado!');
     </script>
 </body>
 </html>
