@@ -623,11 +623,18 @@
                     <div class="hint">A média por fala é calculada por participante, com base no total falado dividido pelo número de falas.</div>
                     <script>window.onload=()=>setTimeout(()=>window.print(),300);<\/script>
                 </body></html>`;
-                const win = window.open('', '_blank', 'noopener,noreferrer,width=900,height=700');
-                if (!win) return alert('Permita pop-ups para exportar em PDF.');
-                win.document.open();
-                win.document.write(html);
-                win.document.close();
+                const win = window.open('', '_blank', 'width=900,height=700');
+                if (!win) return alert('Permita pop-ups para gerar o relatório em PDF.');
+                try {
+                    win.document.open();
+                    win.document.write(html);
+                    win.document.close();
+                    win.focus();
+                } catch (erro) {
+                    console.error('Erro ao gerar relatório:', erro);
+                    try { win.close(); } catch (_) {}
+                    alert('Não foi possível gerar o relatório. Tente novamente ou permita pop-ups para este arquivo.');
+                }
             }
 
             // ----- Usuário -----
